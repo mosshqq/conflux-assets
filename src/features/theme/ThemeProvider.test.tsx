@@ -24,7 +24,7 @@ describe('ThemeProvider', () => {
     document.documentElement.style.colorScheme = '';
   });
 
-  it('switches and persists explicit light and dark themes', async () => {
+  it('cycles theme modes and persists explicit light and dark themes', async () => {
     const user = userEvent.setup();
     render(
       <ThemeProvider>
@@ -32,13 +32,17 @@ describe('ThemeProvider', () => {
       </ThemeProvider>,
     );
 
-    await user.selectOptions(screen.getByLabelText('主题'), 'dark');
+    const themeButton = screen.getByRole('button', { name: /主题：跟随系统/ });
+    await user.click(themeButton);
+    await waitFor(() => expect(document.documentElement).toHaveClass('light'));
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
+
+    await user.click(screen.getByRole('button', { name: /主题：明亮/ }));
     await waitFor(() => expect(document.documentElement).toHaveClass('dark'));
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark');
 
-    await user.selectOptions(screen.getByLabelText('主题'), 'light');
-    await waitFor(() => expect(document.documentElement).toHaveClass('light'));
-    expect(document.documentElement).not.toHaveClass('dark');
-    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
+    await user.click(screen.getByRole('button', { name: /主题：暗黑/ }));
+    await waitFor(() => expect(document.documentElement).not.toHaveClass('dark'));
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('system');
   });
 });

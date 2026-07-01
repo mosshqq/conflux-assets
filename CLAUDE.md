@@ -12,15 +12,16 @@
 ## 当前状态
 
 - 已完成：Core 查询与聚合、地址/池收藏、池详情、四类 Core 交易 UI、eSpace 余额查询。
-- 地址列表保持收藏顺序；界面支持 `system/light/dark` 主题及语义颜色。
-- 完整验收：33 项单元测试、4 项 Playwright E2E 全部通过。
+- 地址列表保持收藏顺序，以高亮标识当前项，并展示每个地址的总 CFX。
+- 界面通过图标按钮切换 `system/light/dark` 主题，颜色均使用语义变量。
+- 完整验收：36 项单元测试、4 项 Playwright E2E 全部通过。
 - 尚未完成：使用专用小额钱包真实验证四类 Core 主网写交易。
 
 ## 技术栈
 
 - React 18、TypeScript、Vite、React Router
 - TanStack Query、js-conflux-sdk、原生 eSpace JSON-RPC、Fluent Provider API
-- Zod、Tailwind CSS、CSS 语义变量
+- Zod、Tailwind CSS、Lucide React、CSS 语义变量
 - Vitest、Testing Library、Playwright
 
 ## 常用命令
@@ -36,3 +37,5 @@ pnpm test:e2e
 ```
 
 生产站点：`https://mosshqq.github.io/conflux-assets/`；`main` 更新会触发 GitHub Pages。
+发布后用 `gh run list --workflow deploy-pages.yml --limit 1` 获取运行，再用
+`gh run watch <run-id>` 核验。

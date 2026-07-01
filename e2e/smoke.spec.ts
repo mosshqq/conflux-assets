@@ -28,15 +28,14 @@ test('eSpace address query shows balance-only scope', async ({ page }) => {
 test('theme preference switches and persists', async ({ page }) => {
   await page.goto('/');
 
-  const theme = page.getByLabel('主题');
-  await theme.selectOption('light');
+  await page.getByRole('button', { name: /主题：跟随系统/ }).click();
   await expect(page.locator('html')).toHaveClass(/light/);
 
-  await theme.selectOption('dark');
+  await page.getByRole('button', { name: /主题：明亮/ }).click();
   await expect(page.locator('html')).toHaveClass(/dark/);
   await page.reload();
 
-  await expect(page.getByLabel('主题')).toHaveValue('dark');
+  await expect(page.getByRole('button', { name: /主题：暗黑/ })).toBeVisible();
   await expect(page.locator('html')).toHaveClass(/dark/);
 });
 

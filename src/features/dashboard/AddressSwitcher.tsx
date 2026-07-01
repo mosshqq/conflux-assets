@@ -1,13 +1,34 @@
 import { Link } from 'react-router-dom';
 import { shortenAddress } from '../../domain/address';
-import type { AddressBookmark } from '../../domain/types';
+import { formatCfx } from '../../domain/money';
+import type { AddressBookmark, PoolConfig } from '../../domain/types';
+import { useAddressTotal } from './useAddressTotal';
 
 interface AddressSwitcherProps {
   currentAddress: string;
   bookmarks: AddressBookmark[];
+  pools: PoolConfig[];
 }
 
-export function AddressSwitcher({ currentAddress, bookmarks }: AddressSwitcherProps) {
+function AddressTotalValue({ address, pools }: { address: string; pools: PoolConfig[] }) {
+  const { totalDrip, isPending, hasPartialError } = useAddressTotal(address, pools);
+  const value = totalDrip === undefined ? '— CFX' : `${formatCfx(totalDrip, 4)} CFX`;
+  const title = isPending
+    ? '总 CFX 读取中'
+    : hasPartialError
+      ? totalDrip === undefined
+        ? '总 CFX 读取失败'
+        : '已显示可用余额与成功读取池的未领取收益，部分池读取失败'
+      : '总 CFX';
+
+  return (
+    <span className="shrink-0 text-xs font-medium text-muted" title={title}>
+      {value}
+    </span>
+  );
+}
+
+export function AddressSwitcher({ currentAddress, bookmarks, pools }: AddressSwitcherProps) {
   const currentBookmark = bookmarks.find((item) => item.address === currentAddress);
   const addresses = currentBookmark
     ? bookmarks
@@ -62,15 +83,11 @@ export function AddressSwitcher({ currentAddress, bookmarks }: AddressSwitcherPr
                   {(item.alias || '址').slice(0, 1).toUpperCase()}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center justify-between gap-2">
                     <span className="truncate text-sm font-medium">
-                      {item.alias || (isSaved ? '未命名地址' : '当前查询')}
+                      {item.alias || (isSaved ? '未命名地址' : '未收藏地址')}
                     </span>
-                    {isCurrent ? (
-                      <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 text-[10px] text-accent">
-                        当前
-                      </span>
-                    ) : null}
+                    <AddressTotalValue address={item.address} pools={pools} />
                   </span>
                   <span className="mt-1 flex items-center gap-1.5">
                     <span className="shrink-0 rounded-full bg-surface px-1.5 py-0.5 text-[9px] text-muted">

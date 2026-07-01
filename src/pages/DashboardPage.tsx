@@ -72,7 +72,7 @@ export function DashboardPage() {
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[17rem_minmax(0,1fr)]">
-      <AddressSwitcher currentAddress={address} bookmarks={bookmarks} />
+      <AddressSwitcher currentAddress={address} bookmarks={bookmarks} pools={pools} />
 
       <div className="min-w-0 space-y-8">
         <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">

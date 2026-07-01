@@ -124,7 +124,7 @@
     @apply inline-flex items-center justify-center rounded-xl border border-line bg-surface px-3 py-2 text-sm text-foreground transition hover:border-line-strong hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  .theme-select {
-    @apply rounded-xl border border-line bg-surface px-2.5 py-2 text-xs text-foreground outline-none transition hover:border-line-strong focus:border-accent/60 focus:ring-2 focus:ring-accent/10;
+  .theme-toggle {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-surface text-foreground outline-none transition hover:border-line-strong hover:bg-surface-hover focus:border-accent/60 focus:ring-2 focus:ring-accent/10;
   }
 }
