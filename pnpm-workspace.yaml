@@ -1,0 +1,10 @@
+packages:
+  - .
+
+allowBuilds:
+  bufferutil: true
+  es5-ext: true
+  esbuild: true
+  keccak: true
+  secp256k1: true
+  utf-8-validate: true
