@@ -43,6 +43,8 @@ e2e/
 
 - `normalizeQueryAddress` 区分 Core/eSpace。
 - Core 经过 `usePortfolio`，每个池使用独立 Query；失败结果不进入聚合。
+- 池持仓查询同时读取 `poolAPY()`，按基点精确展示合约近 7 天年化估算；旧池不支持该
+  方法时仅隐藏 APY，不影响持仓读取。
 - eSpace 经过 `useESpaceBalance`，只调用 `eth_getBalance`。
 - 两类 Query 互斥启用，切换路由不能触发错误网络的请求。
 
@@ -82,6 +84,8 @@ e2e/
 - Core：network ID 1029，`https://main.confluxrpc.com`。
 - eSpace：chain ID 1030，`https://evm.confluxrpc.com`。
 - 链上金额全部使用 `bigint`；展示层只格式化字符串。
+- `poolAPY()` 原始整数按基点保存在 `PoolPosition.expectedApyBps`；读取失败使用 `null`
+  降级，禁止前端根据累计收益或浮点数自行推算。
 - 标准池必须由用户输入并在保存前通过 ABI 读取校验。
 - 钱包直接使用 Fluent 注入 Provider，避免未安装扩展时产生未处理异常。
 - 写交易必须满足 Fluent 已连接、1029、账户匹配、池已校验。

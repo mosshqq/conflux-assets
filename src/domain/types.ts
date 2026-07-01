@@ -19,6 +19,7 @@ export interface UnlockQueueItem {
 
 export interface PoolPosition {
   pool: PoolConfig;
+  expectedApyBps: bigint | null;
   totalVotes: bigint;
   activeVotes: bigint;
   lockedVotes: bigint;

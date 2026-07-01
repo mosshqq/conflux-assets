@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { CORE_MAINNET, PORTFOLIO_REFRESH_INTERVAL } from '../config/network';
 import { addressesEqual, normalizePoolAddress, normalizeUserAddress } from '../domain/address';
-import { formatCfx, votesToDrip } from '../domain/money';
+import { formatBasisPoints, formatCfx, votesToDrip } from '../domain/money';
 import { usePools } from '../features/pools/usePools';
 import { PoolActions } from '../features/wallet/PoolActions';
 import {
@@ -118,7 +118,7 @@ export function PoolDetailPage() {
         </div>
       ) : (
         <>
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {[
               ['有效质押', votesToDrip(positionQuery.data.activeVotes), false],
               ['解质押中', votesToDrip(positionQuery.data.pendingVotes), false],
@@ -132,7 +132,20 @@ export function PoolDetailPage() {
                 </p>
               </div>
             ))}
+            <div className="rounded-2xl border border-line bg-panel p-5">
+              <p className="text-sm text-muted" title="由池合约按最近 7 天收益年化估算">
+                预期 APY
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-accent">
+                {positionQuery.data.expectedApyBps === null
+                  ? '—'
+                  : formatBasisPoints(positionQuery.data.expectedApyBps)}
+              </p>
+            </div>
           </section>
+          <p className="-mt-4 text-xs text-muted">
+            预期 APY 由池合约基于最近 7 天收益年化估算，不代表未来实际收益。
+          </p>
 
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-line bg-panel p-5">

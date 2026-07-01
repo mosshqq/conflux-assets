@@ -50,6 +50,7 @@ describe('useAddressTotal', () => {
     readCfxBalance.mockResolvedValue(10n);
     readPoolPosition.mockResolvedValue({
       pool,
+      expectedApyBps: 1290n,
       totalVotes: 0n,
       activeVotes: 0n,
       lockedVotes: 0n,
@@ -89,6 +90,7 @@ describe('useAddressTotal', () => {
         ? Promise.reject(new Error('RPC failed'))
         : Promise.resolve({
             pool,
+            expectedApyBps: 1290n,
             totalVotes: 0n,
             activeVotes: 0n,
             lockedVotes: 0n,

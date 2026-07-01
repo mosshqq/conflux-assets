@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { PoolConfig, PoolPosition } from '../../domain/types';
-import { formatCfx, votesToDrip } from '../../domain/money';
+import { formatBasisPoints, formatCfx, votesToDrip } from '../../domain/money';
 import { shortenAddress } from '../../domain/address';
 
 export function PoolCard({
@@ -30,7 +30,18 @@ export function PoolCard({
           </div>
           <p className="mt-1 font-mono text-xs text-muted">{shortenAddress(pool.address)}</p>
         </div>
-        {loading ? <span className="text-xs text-muted">加载中…</span> : null}
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <span
+            className="rounded-full bg-accent/10 px-2 py-1 text-xs font-medium text-accent"
+            title="由池合约按最近 7 天收益年化估算"
+          >
+            预期 APY{' '}
+            {position?.expectedApyBps !== null && position?.expectedApyBps !== undefined
+              ? formatBasisPoints(position.expectedApyBps)
+              : '—'}
+          </span>
+          {loading ? <span className="text-xs text-muted">加载中…</span> : null}
+        </div>
       </div>
 
       {error ? (

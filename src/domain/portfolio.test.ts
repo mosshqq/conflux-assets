@@ -11,6 +11,7 @@ function position(overrides: Partial<PoolPosition> = {}): PoolPosition {
       address: 'cfx:contract',
       source: 'custom',
     },
+    expectedApyBps: 1290n,
     totalVotes: 5n,
     activeVotes: 3n,
     lockedVotes: 2n,

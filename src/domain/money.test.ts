@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DRIP_PER_CFX,
   DRIP_PER_VOTE,
+  formatBasisPoints,
   formatCfx,
   isWholeVoteAmount,
   parseCfx,
@@ -24,5 +25,10 @@ describe('money', () => {
     expect(isWholeVoteAmount(DRIP_PER_VOTE)).toBe(true);
     expect(isWholeVoteAmount(DRIP_PER_VOTE + 1n)).toBe(false);
     expect(isWholeVoteAmount(0n)).toBe(false);
+  });
+
+  it('formats APY basis points without floating point arithmetic', () => {
+    expect(formatBasisPoints(1290n)).toBe('12.90%');
+    expect(formatBasisPoints(5n)).toBe('0.05%');
   });
 });

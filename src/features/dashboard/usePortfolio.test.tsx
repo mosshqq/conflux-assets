@@ -21,6 +21,7 @@ const pools: PoolConfig[] = [
 
 const goodPosition: PoolPosition = {
   pool: pools[0],
+  expectedApyBps: 1290n,
   totalVotes: 1n,
   activeVotes: 1n,
   lockedVotes: 1n,

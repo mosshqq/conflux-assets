@@ -33,6 +33,14 @@ function field(value: any, name: string, index: number): unknown {
   return value?.[name] ?? value?.[index];
 }
 
+async function readExpectedPoolApy(contract: any): Promise<bigint | null> {
+  try {
+    return toBigInt(await callMethod(contract.poolAPY()));
+  } catch {
+    return null;
+  }
+}
+
 export async function readCfxBalance(address: string): Promise<bigint> {
   return toBigInt(await conflux.getBalance(address));
 }
@@ -47,11 +55,12 @@ export async function readPoolPosition(
   userAddress: string,
 ): Promise<PoolPosition> {
   const contract = contractAt(pool.address);
-  const [summary, interest, queue, lockInfo] = await Promise.all([
+  const [summary, interest, queue, lockInfo, expectedApyBps] = await Promise.all([
     callMethod(contract.userSummary(userAddress)),
     callMethod(contract.userInterest(userAddress)),
     callMethod(contract.userOutQueue(userAddress)),
     callMethod(contract.userLockInfo(userAddress)),
+    readExpectedPoolApy(contract),
   ]);
 
   const totalVotes = toBigInt(field(summary, 'votes', 0) ?? 0);
@@ -68,6 +77,7 @@ export async function readPoolPosition(
 
   return {
     pool,
+    expectedApyBps,
     totalVotes,
     activeVotes,
     lockedVotes,

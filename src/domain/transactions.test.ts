@@ -5,6 +5,7 @@ import type { PoolPosition } from './types';
 
 const POSITION: PoolPosition = {
   pool: { id: 'p', name: 'Pool', address: 'cfx:contract', source: 'custom' },
+  expectedApyBps: 1290n,
   totalVotes: 6n,
   activeVotes: 5n,
   lockedVotes: 5n,

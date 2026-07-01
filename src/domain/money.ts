@@ -38,6 +38,14 @@ export function formatCfx(drip: bigint, maximumFractionDigits = 4): string {
   return `${negative ? '-' : ''}${whole.toLocaleString('en-US')}${trimmed ? `.${trimmed}` : ''}`;
 }
 
+export function formatBasisPoints(value: bigint): string {
+  const negative = value < 0n;
+  const absolute = negative ? -value : value;
+  const whole = absolute / 100n;
+  const fraction = (absolute % 100n).toString().padStart(2, '0');
+  return `${negative ? '-' : ''}${whole.toLocaleString('en-US')}.${fraction}%`;
+}
+
 export function votesToDrip(votes: bigint): bigint {
   return votes * DRIP_PER_VOTE;
 }

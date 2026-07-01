@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => {
     userLockInfo: vi.fn(() => method('0xlock', [1000n, 600n])),
     poolName: vi.fn(() => method('0xname', 'Mock Pool')),
     poolSummary: vi.fn(() => method('0xpool', [10n, 20n, 30n])),
+    poolAPY: vi.fn(() => method('0xapy', 1290n)),
     increaseStake: vi.fn(() => method('0xstake')),
     decreaseStake: vi.fn(() => method('0xunstake')),
     claimAllInterest: vi.fn(() => method('0xclaim')),
@@ -66,6 +67,7 @@ describe('Conflux client', () => {
 
     const position = await readPoolPosition(POOL, 'cfx:user');
     expect(position).toMatchObject({
+      expectedApyBps: 1290n,
       totalVotes: 5n,
       activeVotes: 3n,
       lockedVotes: 2n,
@@ -75,6 +77,20 @@ describe('Conflux client', () => {
       claimableDrip: 99n,
     });
     expect(position.unlockQueue).toEqual([{ votes: 1n, unlockBlock: 500n }]);
+  });
+
+  it('keeps position data when an older pool does not expose APY', async () => {
+    mocks.contract.poolAPY.mockImplementationOnce(() => ({
+      data: '0xapy',
+      call: vi.fn().mockRejectedValue(new Error('method not found')),
+      estimateGasAndCollateral: vi.fn(),
+    }));
+
+    await expect(readPoolPosition(POOL, 'cfx:user')).resolves.toMatchObject({
+      expectedApyBps: null,
+      activeVotes: 3n,
+      claimableDrip: 99n,
+    });
   });
 
   it('validates the minimum standard pool read interface', async () => {
