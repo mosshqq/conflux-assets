@@ -16,6 +16,7 @@ Pages
 ```
 
 页面不得直接访问 RPC、`window.conflux`、localStorage 或自行构造交易。
+根元素使用稳定滚动条槽位，禁止因页面高度差异造成路由切换时的横向位移。
 
 ## 目录职责
 
@@ -33,7 +34,7 @@ src/
   infrastructure/storage/ 业务 localStorage schema 与恢复
   pages/                  首页、地址总览、池详情
 e2e/
-  smoke.spec.ts           关键本地流程与主题持久化
+  smoke.spec.ts           关键本地流程、主题持久化与布局稳定性
 ```
 
 ## 数据流与边界

@@ -39,6 +39,14 @@ test('theme preference switches and persists', async ({ page }) => {
   await expect(page.locator('html')).toHaveClass(/dark/);
 });
 
+test('reserves scrollbar space across routes', async ({ page }) => {
+  await page.goto('/');
+
+  await expect
+    .poll(() => page.evaluate(() => getComputedStyle(document.documentElement).scrollbarGutter))
+    .toBe('stable');
+});
+
 test('dashboard switches between saved addresses', async ({ page }) => {
   const currentAddress = 'cfx:aajaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaej6bs8mvt';
   const otherAddress = 'cfx:aajaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajdjkb084d';

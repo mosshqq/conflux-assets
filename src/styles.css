@@ -33,6 +33,7 @@
       'Segoe UI',
       sans-serif;
     background: rgb(var(--color-ink));
+    scrollbar-gutter: stable;
   }
 
   :root.dark {
