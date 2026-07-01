@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { EMPTY_PERSISTED_STATE, readPersistedState, writePersistedState } from './localState';
+import { CORE_MAINNET, CORE_TESTNET } from '../../config/network';
+import {
+  EMPTY_PERSISTED_STATE,
+  readPersistedState,
+  storageKeyForCoreNetwork,
+  writePersistedState,
+} from './localState';
 
 class MemoryStorage implements Storage {
   private data = new Map<string, string>();
@@ -24,6 +30,11 @@ class MemoryStorage implements Storage {
 }
 
 describe('local state', () => {
+  it('keeps mainnet and local testnet data in separate storage keys', () => {
+    expect(storageKeyForCoreNetwork(CORE_MAINNET)).toBe('conflux-pos-dashboard:v1');
+    expect(storageKeyForCoreNetwork(CORE_TESTNET)).toBe('conflux-pos-dashboard:core-testnet:v1');
+  });
+
   it('round-trips versioned data', () => {
     const storage = new MemoryStorage();
     const state = {

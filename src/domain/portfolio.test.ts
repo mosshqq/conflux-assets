@@ -40,8 +40,26 @@ describe('portfolio', () => {
 
   it('deducts governance locks from unstakeable votes', () => {
     expect(
-      maxUnstakeVotes(position({ activeVotes: 5n, governanceLockedDrip: 2n * DRIP_PER_VOTE })),
+      maxUnstakeVotes(
+        position({
+          activeVotes: 5n,
+          lockedVotes: 5n,
+          governanceLockedDrip: 2n * DRIP_PER_VOTE,
+        }),
+      ),
     ).toBe(3n);
+  });
+
+  it('excludes votes that are still in the staking lock queue', () => {
+    expect(
+      maxUnstakeVotes(
+        position({
+          activeVotes: 1n,
+          lockedVotes: 0n,
+          governanceLockedDrip: 0n,
+        }),
+      ),
+    ).toBe(0n);
   });
 
   it('recognizes rewards-only positions', () => {

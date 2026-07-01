@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import { CORE_NETWORK, type CoreNetwork } from '../../config/network';
 import { addressesEqual } from '../../domain/address';
 import type { PreparedTransaction } from '../../domain/types';
 import { getFluentProvider } from './provider';
 
 type WalletStatus = 'not-installed' | 'not-active' | 'in-activating' | 'active' | 'chain-error';
 
-export function useCoreWallet(viewedAddress?: string) {
+export function useCoreWallet(viewedAddress?: string, network: CoreNetwork = CORE_NETWORK) {
   const [status, setStatus] = useState<WalletStatus>(() =>
     getFluentProvider() ? 'not-active' : 'not-installed',
   );
@@ -87,16 +88,16 @@ export function useCoreWallet(viewedAddress?: string) {
   );
 
   const numericChainId = chainId ? Number(BigInt(chainId)) : undefined;
-  const isMainnet = numericChainId === 1029;
-  const isMatchingAccount = addressesEqual(account, viewedAddress);
+  const isExpectedNetwork = numericChainId === network.chainId;
+  const isMatchingAccount = addressesEqual(account, viewedAddress, network);
 
   return {
     status,
     account,
     chainId,
-    isMainnet,
+    isExpectedNetwork,
     isMatchingAccount,
-    canTransact: status === 'active' && isMainnet && isMatchingAccount,
+    canTransact: status === 'active' && isExpectedNetwork && isMatchingAccount,
     connect,
     sendTransaction,
   };

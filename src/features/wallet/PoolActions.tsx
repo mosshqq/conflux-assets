@@ -1,9 +1,13 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { CORE_MAINNET } from '../../config/network';
+import { CORE_NETWORK } from '../../config/network';
 import { formatCfx, parseCfx, votesToDrip } from '../../domain/money';
 import { maxUnstakeVotes } from '../../domain/portfolio';
-import { validateStakeAmount, validateUnstakeAmount } from '../../domain/transactions';
+import {
+  validateStakeAmount,
+  validateTransactionBalance,
+  validateUnstakeAmount,
+} from '../../domain/transactions';
 import type { PoolAction, PoolConfig, PoolPosition } from '../../domain/types';
 import {
   preparePoolTransaction,
@@ -51,7 +55,9 @@ export function PoolActions({
   function requireWallet() {
     if (wallet.status === 'not-installed') throw new Error('请先安装 Fluent 钱包');
     if (wallet.status !== 'active') throw new Error('请先连接 Fluent 钱包');
-    if (!wallet.isMainnet) throw new Error('请在 Fluent 中切换到 Conflux Core Space 主网');
+    if (!wallet.isExpectedNetwork) {
+      throw new Error(`请在 Fluent 中切换到 Conflux Core Space ${CORE_NETWORK.label}`);
+    }
     if (!wallet.isMatchingAccount) throw new Error('连接账户与当前查看地址不一致');
   }
 
@@ -120,6 +126,7 @@ export function PoolActions({
         votes: pending.votes,
         valueDrip: pending.valueDrip,
       });
+      validateTransactionBalance(transaction, walletBalanceDrip);
       const hash = await wallet.sendTransaction(transaction);
       setTransactionHash(hash);
       setPending(null);
@@ -143,8 +150,8 @@ export function PoolActions({
       ? '未检测到 Fluent'
       : wallet.status !== 'active'
         ? '连接 Fluent 后可操作'
-        : !wallet.isMainnet
-          ? '钱包网络不是 Core Space 主网'
+        : !wallet.isExpectedNetwork
+          ? `钱包网络不是 Core Space ${CORE_NETWORK.label}`
           : !wallet.isMatchingAccount
             ? '连接账户与查看地址不一致，仅可查看'
             : '账户已匹配，可以安全发起交易';
@@ -182,7 +189,9 @@ export function PoolActions({
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-line p-4">
           <p className="font-medium">增加质押</p>
-          <p className="mt-1 text-xs text-muted">1000 CFX 为一票，钱包至少保留 1 CFX。</p>
+          <p className="mt-1 text-xs text-muted">
+            1000 CFX 为一票；签名前按 gas 与存储抵押估算校验余额。
+          </p>
           <div className="mt-4 flex">
             <input
               value={stakeAmount}
@@ -253,7 +262,7 @@ export function PoolActions({
         </button>
       </div>
 
-      {error ? (
+      {error && !pending ? (
         <p className="mt-4 rounded-xl bg-danger/10 p-3 text-sm text-danger">{error}</p>
       ) : null}
 
@@ -263,7 +272,7 @@ export function PoolActions({
             {receiptState === 'waiting' ? '交易已提交，等待执行…' : '交易执行成功'}
           </p>
           <a
-            href={`${CORE_MAINNET.explorerUrl}/transaction/${transactionHash}`}
+            href={`${CORE_NETWORK.explorerUrl}/transaction/${transactionHash}`}
             target="_blank"
             rel="noreferrer"
             className="mt-2 block break-all font-mono text-xs text-foreground underline"
@@ -297,6 +306,9 @@ export function PoolActions({
             <p className="mt-4 text-xs leading-5 text-muted">
               确认后将先估算 gas 与存储抵押，再由 Fluent 展示最终签名请求。
             </p>
+            {error ? (
+              <p className="mt-4 rounded-xl bg-danger/10 p-3 text-sm text-danger">{error}</p>
+            ) : null}
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"

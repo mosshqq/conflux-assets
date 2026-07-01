@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CORE_TESTNET } from '../config/network';
 import {
   addressesEqual,
   normalizeESpaceAddress,
@@ -9,6 +10,8 @@ import {
 
 const USER = 'cfx:aamjy3abae3j0ud8ys0npt38ggnunk5r4ps2pg8vcc';
 const POOL = 'cfx:acdj1y1r00mzvuw9s831rj1t5amst2405jv582syu0';
+const TESTNET_USER = 'cfxtest:aamjy3abae3j0ud8ys0npt38ggnunk5r4pex9025gj';
+const TESTNET_POOL = 'cfxtest:acdj1y1r00mzvuw9s831rj1t5amst2405j5urjj8y6';
 
 describe('Core address rules', () => {
   it('normalizes a mainnet user address', () => {
@@ -27,9 +30,13 @@ describe('Core address rules', () => {
   });
 
   it('rejects non-mainnet prefixes', () => {
-    expect(() =>
-      normalizeUserAddress('cfxtest:aamjy3abae3j0ud8ys0npt38ggnunk5r4pex9025gj'),
-    ).toThrow('仅支持');
+    expect(() => normalizeUserAddress(TESTNET_USER)).toThrow('仅支持');
+  });
+
+  it('normalizes testnet users and pools against the testnet configuration', () => {
+    expect(normalizeUserAddress(TESTNET_USER.toUpperCase(), CORE_TESTNET)).toBe(TESTNET_USER);
+    expect(normalizePoolAddress(TESTNET_POOL, CORE_TESTNET)).toBe(TESTNET_POOL);
+    expect(() => normalizeUserAddress(USER, CORE_TESTNET)).toThrow('仅支持');
   });
 
   it('normalizes eSpace addresses and detects the query space', () => {

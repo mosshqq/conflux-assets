@@ -9,11 +9,19 @@
 
 ## 不变量
 
-- Core Space 只支持主网 network ID 1029；eSpace 只支持主网 chain ID 1030。
+- 生产构建的 Core Space 只支持主网 network ID 1029；本地 `pnpm dev:testnet` 使用测试网
+  network ID 1。eSpace 始终只支持主网 chain ID 1030。
 - eSpace 当前只读原生 CFX 余额，不扫描池、不连接钱包、不发送交易。
 - 链上金额、Drip、票数和收益只能用 `bigint` 或十进制字符串，禁止浮点数。
 - 源码禁止预置池；池地址必须由用户输入并通过标准 PoS Pool ABI 校验。
-- Core 写交易必须同时满足：Fluent 已连接、网络 1029、账户等于查看地址、池已校验。
+- Core 写交易必须同时满足：Fluent 已连接、钱包网络等于当前 Core 配置、账户等于查看
+  地址、池已校验。
+- 可发起解质押票数只能使用 `userSummary.locked` 扣除治理锁定票数，禁止使用包含
+  `inQueue` 的 `available`。
+- 交易签名前必须按准备后的字段校验余额可覆盖
+  `value + gas * gasPrice + storageLimit * 1 CFX / 1024`。
+- SDK/RPC 直发只能验证链上行为；涉及 Fluent 确认、页面状态和 Query 刷新的任务，必须
+  使用本地测试网 UI 完成后才能标记为端到端验证通过。
 - 单池 RPC 异常必须隔离，不能中断 Core 余额或其他池查询。
 - 池预期 APY 只能读取标准池 `poolAPY()` 并按基点展示；旧池不支持时显示不可用，不得
   让 APY 失败中断该池持仓查询，也不得改用前端浮点估算。
@@ -25,6 +33,7 @@
 - 主题颜色必须使用 `src/styles.css` 与 Tailwind 的语义变量，禁止重新写死暗色值。
 - 根元素必须保留稳定滚动条槽位，Core/eSpace 页面高度变化不能造成横向抖动。
 - 禁止提交私钥、助记词、钱包导出、临时测试账户或真实测试资产信息。
+- 接续测试时由用户重新提供或连接专用测试钱包；文档只记录无敏感信息的区块检查点。
 
 ## 完整验收
 

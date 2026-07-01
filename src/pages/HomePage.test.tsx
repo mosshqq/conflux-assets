@@ -18,7 +18,7 @@ describe('HomePage', () => {
       </MemoryRouter>,
     );
 
-    await user.type(screen.getByLabelText('Conflux 主网地址'), '0x1234');
+    await user.type(screen.getByLabelText('Conflux 地址'), '0x1234');
     await user.click(screen.getByRole('button', { name: '查询资产' }));
     expect(screen.getByText('eSpace 地址必须是 0x 开头的 20 字节十六进制地址')).toBeInTheDocument();
   });

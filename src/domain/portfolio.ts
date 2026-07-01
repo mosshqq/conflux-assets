@@ -29,5 +29,5 @@ export function hasPosition(position: PoolPosition): boolean {
 
 export function maxUnstakeVotes(position: PoolPosition): bigint {
   const governanceVotes = position.governanceLockedDrip / (1000n * 10n ** 18n);
-  return position.activeVotes > governanceVotes ? position.activeVotes - governanceVotes : 0n;
+  return position.lockedVotes > governanceVotes ? position.lockedVotes - governanceVotes : 0n;
 }

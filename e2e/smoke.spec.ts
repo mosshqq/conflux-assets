@@ -4,10 +4,10 @@ test('home page exposes address search and saved pool status', async ({ page }) 
   await page.goto('/');
 
   await expect(page.getByRole('heading', { name: /一个地址/ })).toBeVisible();
-  await expect(page.getByLabel('Conflux 主网地址')).toBeVisible();
+  await expect(page.getByLabel('Conflux 地址')).toBeVisible();
   await expect(page.getByText('已收藏 0 个')).toBeVisible();
 
-  await page.getByLabel('Conflux 主网地址').fill('0x1234');
+  await page.getByLabel('Conflux 地址').fill('0x1234');
   await page.getByRole('button', { name: '查询资产' }).click();
   await expect(page.getByText('eSpace 地址必须是 0x 开头的 20 字节十六进制地址')).toBeVisible();
 });
@@ -16,7 +16,7 @@ test('eSpace address query shows balance-only scope', async ({ page }) => {
   const address = '0x1000000000000000000000000000000000000001';
   await page.goto('/');
 
-  await page.getByLabel('Conflux 主网地址').fill(address);
+  await page.getByLabel('Conflux 地址').fill(address);
   await page.getByRole('button', { name: '查询资产' }).click();
 
   await expect(page).toHaveURL(`/address/${address}`);

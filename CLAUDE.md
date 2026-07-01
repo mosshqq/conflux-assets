@@ -1,7 +1,8 @@
 # Conflux Assets Dashboard
 
-纯前端 Conflux 主网资产看板。Core Space 地址支持余额、标准 PoS Pool 持仓、池合约
-预期 APY 和受门禁保护的交易；eSpace 地址暂时只支持原生 CFX 余额。
+纯前端 Conflux 资产看板。生产环境使用 Core Space 主网；本地可显式切换 Core Space
+测试网验证写交易。Core 地址支持余额、标准 PoS Pool 持仓、池合约预期 APY 和受门禁
+保护的交易；eSpace 始终只支持主网原生 CFX 余额。
 
 ## 接手入口
 
@@ -16,8 +17,9 @@
 - 地址列表保持收藏顺序，以高亮标识当前项，并展示每个地址的总 CFX。
 - 界面通过图标按钮切换 `system/light/dark` 主题，颜色均使用语义变量。
 - Core/eSpace 路由切换使用稳定滚动条槽位，页面宽度不随内容高度变化。
-- 完整验收：38 项单元测试、5 项 Playwright E2E 全部通过。
-- 尚未完成：使用专用小额钱包真实验证四类 Core 主网写交易。
+- 完整验收：46 项单元测试、5 项 Playwright E2E 全部通过。
+- 测试网已完成两笔各 1 票的增加质押、回执和状态回读；后续解质押、领取收益和分批
+  提取检查点见 `docs/TODO.md`。测试钱包信息未持久化。
 
 ## 技术栈
 
@@ -30,6 +32,7 @@
 
 ```bash
 pnpm dev
+pnpm dev:testnet
 pnpm typecheck
 pnpm lint
 pnpm format:check

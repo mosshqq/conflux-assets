@@ -1,4 +1,5 @@
 import { address as addressUtils } from 'js-conflux-sdk';
+import { CORE_NETWORK, type CoreNetwork } from '../config/network';
 
 export interface DecodedCoreAddress {
   normalized: string;
@@ -14,10 +15,13 @@ export interface NormalizedQueryAddress {
   space: QueryAddressSpace;
 }
 
-export function decodeCoreAddress(value: string): DecodedCoreAddress {
+export function decodeCoreAddress(
+  value: string,
+  network: CoreNetwork = CORE_NETWORK,
+): DecodedCoreAddress {
   const input = value.trim();
-  if (!input.toLowerCase().startsWith('cfx:')) {
-    throw new Error('仅支持 cfx: 开头的 Core Space 主网地址');
+  if (!input.toLowerCase().startsWith(`${network.addressPrefix}:`)) {
+    throw new Error(`仅支持 ${network.addressPrefix}: 开头的 Core Space ${network.label}地址`);
   }
 
   try {
@@ -27,8 +31,8 @@ export function decodeCoreAddress(value: string): DecodedCoreAddress {
       type: string;
     };
 
-    if (decoded.netId !== 1029) {
-      throw new Error('地址不属于 Conflux Core Space 主网');
+    if (decoded.netId !== network.networkId) {
+      throw new Error(`地址不属于 Conflux Core Space ${network.label}`);
     }
 
     return {
@@ -38,13 +42,18 @@ export function decodeCoreAddress(value: string): DecodedCoreAddress {
       networkId: decoded.netId,
     };
   } catch (error) {
-    if (error instanceof Error && error.message.includes('主网')) throw error;
+    if (
+      error instanceof Error &&
+      (error.message.startsWith('仅支持') || error.message.startsWith('地址不属于'))
+    ) {
+      throw error;
+    }
     throw new Error('Core Space 地址格式或校验和无效');
   }
 }
 
-export function normalizeUserAddress(value: string): string {
-  const decoded = decodeCoreAddress(value);
+export function normalizeUserAddress(value: string, network: CoreNetwork = CORE_NETWORK): string {
+  const decoded = decodeCoreAddress(value, network);
   if (decoded.type !== 'user') {
     throw new Error('查询地址必须是 Core Space 用户地址');
   }
@@ -61,27 +70,33 @@ export function normalizeESpaceAddress(value: string): string {
 
 export function normalizeQueryAddress(value: string): NormalizedQueryAddress {
   const input = value.trim();
-  if (input.toLowerCase().startsWith('cfx:')) {
+  if (input.toLowerCase().startsWith(`${CORE_NETWORK.addressPrefix}:`)) {
     return { address: normalizeUserAddress(input), space: 'core' };
   }
   if (input.toLowerCase().startsWith('0x')) {
     return { address: normalizeESpaceAddress(input), space: 'espace' };
   }
-  throw new Error('请输入 cfx: 开头的 Core Space 地址或 0x 开头的 eSpace 地址');
+  throw new Error(
+    `请输入 ${CORE_NETWORK.addressPrefix}: 开头的 Core Space 地址或 0x 开头的 eSpace 地址`,
+  );
 }
 
-export function normalizePoolAddress(value: string): string {
-  const decoded = decodeCoreAddress(value);
+export function normalizePoolAddress(value: string, network: CoreNetwork = CORE_NETWORK): string {
+  const decoded = decodeCoreAddress(value, network);
   if (decoded.type !== 'contract') {
     throw new Error('池地址必须是 Core Space 合约地址');
   }
   return decoded.normalized;
 }
 
-export function addressesEqual(left?: string, right?: string): boolean {
+export function addressesEqual(
+  left?: string,
+  right?: string,
+  network: CoreNetwork = CORE_NETWORK,
+): boolean {
   if (!left || !right) return false;
   try {
-    return decodeCoreAddress(left).hex === decodeCoreAddress(right).hex;
+    return decodeCoreAddress(left, network).hex === decodeCoreAddress(right, network).hex;
   } catch {
     return false;
   }

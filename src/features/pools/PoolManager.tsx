@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useAppState } from '../../app/useAppState';
+import { CORE_NETWORK } from '../../config/network';
 import { decodeCoreAddress, normalizePoolAddress, shortenAddress } from '../../domain/address';
 import { validateStandardPool } from '../../infrastructure/conflux/client';
 
@@ -68,7 +69,7 @@ export function PoolManager() {
           required
           value={address}
           onChange={(event) => setAddress(event.target.value)}
-          placeholder="cfx: 合约地址"
+          placeholder={`${CORE_NETWORK.addressPrefix}: 合约地址`}
           className="field"
         />
         <input

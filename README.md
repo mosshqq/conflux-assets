@@ -1,6 +1,7 @@
 # Conflux PoS Dashboard
 
-Conflux Core Space 主网 PoS 资产看板。用户无需连接钱包即可查询地址余额和标准 PoS Pool 持仓；连接 Fluent 且地址匹配后可执行完整质押生命周期。
+Conflux Core Space PoS 资产看板。生产环境使用主网；用户无需连接钱包即可查询地址余额和
+标准 PoS Pool 持仓，连接 Fluent 且网络与地址匹配后可执行完整质押生命周期。
 
 ## 在线访问
 
@@ -14,6 +15,15 @@ Conflux Core Space 主网 PoS 资产看板。用户无需连接钱包即可查�
 pnpm install
 pnpm dev
 ```
+
+本地验证 Core Space 测试网写交易：
+
+```bash
+pnpm dev:testnet
+```
+
+该模式使用 `https://test.confluxrpc.com`、network ID `1` 和 `cfxtest:` 地址，并与主网
+收藏数据隔离。生产构建始终强制使用 Core Space 主网；eSpace 始终使用主网。
 
 ## 验收
 

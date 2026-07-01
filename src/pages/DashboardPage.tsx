@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAppState } from '../app/useAppState';
 import { MetricCard } from '../components/MetricCard';
+import { CORE_NETWORK } from '../config/network';
 import { normalizeQueryAddress, shortenAddress, type QueryAddressSpace } from '../domain/address';
 import { formatCfx } from '../domain/money';
 import { aggregatePositions, hasPosition } from '../domain/portfolio';
@@ -83,7 +84,9 @@ export function DashboardPage() {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-semibold">地址资产明细</h1>
               <span className="rounded-full border border-line bg-surface px-2 py-1 text-xs text-muted">
-                {isESpace ? 'eSpace Mainnet · 1030' : 'Core Space Mainnet · 1029'}
+                {isESpace
+                  ? 'eSpace Mainnet · 1030'
+                  : `Core Space ${CORE_NETWORK.id === 'testnet' ? 'Testnet' : 'Mainnet'} · ${CORE_NETWORK.networkId}`}
               </span>
             </div>
             <p className="mt-2 break-all font-mono text-sm text-muted">{address}</p>

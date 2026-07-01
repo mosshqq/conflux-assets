@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../app/useAppState';
+import { CORE_NETWORK } from '../config/network';
 import { normalizeQueryAddress, shortenAddress } from '../domain/address';
 import { PoolManager } from '../features/pools/PoolManager';
 
@@ -28,19 +29,20 @@ export function HomePage() {
           Read without wallet
         </p>
         <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight sm:text-5xl">
-          一个地址，查看 Conflux 主网资产
+          一个地址，查看 Conflux 资产
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-muted sm:text-base">
-          Core Space 地址可查询余额、PoS 持仓与收益；eSpace 地址暂时只查询原生 CFX 余额。只有 Core
-          地址主动连接 Fluent 且账户匹配时，才会开放交易。
+          Core Space {CORE_NETWORK.label}地址可查询余额、PoS 持仓与收益；eSpace
+          地址暂时只查询主网原生 CFX 余额。只有 Core 地址主动连接 Fluent
+          且账户匹配时，才会开放交易。
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 flex max-w-4xl flex-col gap-3 sm:flex-row">
           <input
             value={address}
             onChange={(event) => setAddress(event.target.value)}
-            placeholder="输入 cfx: Core Space 地址或 0x eSpace 地址"
-            aria-label="Conflux 主网地址"
+            placeholder={`输入 ${CORE_NETWORK.addressPrefix}: Core Space 地址或 0x eSpace 地址`}
+            aria-label="Conflux 地址"
             className="field min-w-0 flex-1 py-3.5"
           />
           <button type="submit" className="primary-button px-7">
@@ -49,8 +51,8 @@ export function HomePage() {
         </form>
         {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
         <p className="mt-3 text-xs leading-5 text-muted">
-          支持 Core Space 主网（network ID 1029）与 eSpace 主网（chain ID 1030）；eSpace
-          暂不支持代币、PoS 持仓或交易。
+          支持 Core Space {CORE_NETWORK.label}（network ID {CORE_NETWORK.networkId}）与 eSpace
+          主网（chain ID 1030）；eSpace 暂不支持代币、PoS 持仓或交易。
         </p>
       </section>
 

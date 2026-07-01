@@ -1,5 +1,5 @@
 import { Conflux } from 'js-conflux-sdk';
-import { CORE_MAINNET } from '../../config/network';
+import { CORE_NETWORK } from '../../config/network';
 import { POS_POOL_ABI } from '../../config/posPoolAbi';
 import { addGasMargin, DRIP_PER_VOTE, toBigInt, toHex } from '../../domain/money';
 import type {
@@ -11,8 +11,8 @@ import type {
 } from '../../domain/types';
 
 export const conflux = new Conflux({
-  url: CORE_MAINNET.rpcUrl,
-  networkId: CORE_MAINNET.networkId,
+  url: CORE_NETWORK.rpcUrl,
+  networkId: CORE_NETWORK.networkId,
   timeout: 20_000,
   retry: 1,
 });

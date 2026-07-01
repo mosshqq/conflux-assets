@@ -24,7 +24,7 @@ Pages
 src/
   app/                    Provider、路由、业务状态上下文
   components/             无链上副作用的通用 UI
-  config/                 Core/eSpace 主网配置、标准池 ABI
+  config/                 Core 主网/本地测试网、eSpace 主网配置、标准池 ABI
   domain/                 地址、金额、聚合、交易规则与类型
   features/dashboard/     Core 聚合、eSpace 余额、地址切换与列表总额
   features/pools/         池集合、校验、管理与卡片
@@ -41,7 +41,7 @@ e2e/
 
 ### 地址查询
 
-- `normalizeQueryAddress` 区分 Core/eSpace。
+- `normalizeQueryAddress` 区分 Core/eSpace，并只接受当前 Core 网络对应的地址前缀。
 - Core 经过 `usePortfolio`，每个池使用独立 Query；失败结果不进入聚合。
 - 池持仓查询同时读取 `poolAPY()`，按基点精确展示合约近 7 天年化估算；旧池不支持该
   方法时仅隐藏 APY，不影响持仓读取。
@@ -62,18 +62,23 @@ e2e/
 
 ```text
 表单校验
-  -> Fluent/1029/账户匹配/池校验门禁
+  -> Fluent/当前 Core network ID/账户匹配/池校验门禁
   -> gas 与 storage 估算
+  -> value + gas + storage 最大占用余额校验
   -> 用户确认与签名
   -> 回执轮询
   -> Query 失效刷新
 ```
 
 页面与组件不得绕过 `features/wallet` 和 `infrastructure/conflux`。
+SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确认弹窗、回执状态和 Query
+失效刷新的 UI 端到端验证。
 
 ### 持久化与主题
 
-- `conflux-pos-dashboard:v1` 只保存 `bookmarks`、`customPools`；链上数据不落盘。
+- 主网使用 `conflux-pos-dashboard:v1`，本地 Core 测试网使用
+  `conflux-pos-dashboard:core-testnet:v1`；两者都只保存 `bookmarks`、`customPools`，
+  链上数据不落盘。
 - 主题使用独立 key `conflux-assets:theme`，值为 `system | light | dark`。
 - 主题控件使用 Lucide 图标按钮按 `system -> light -> dark` 循环切换。
 - 颜色定义在 `src/styles.css` 的 CSS 变量，Tailwind 只引用语义颜色。
@@ -81,14 +86,23 @@ e2e/
 
 ## 关键决策
 
-- Core：network ID 1029，`https://main.confluxrpc.com`。
+- Core 生产环境：network ID 1029，`https://main.confluxrpc.com`。
+- Core 本地测试网模式：network ID 1，`https://test.confluxrpc.com`；仅
+  `pnpm dev:testnet` 生效，生产构建即使使用同名 Vite mode 也强制回退主网。
 - eSpace：chain ID 1030，`https://evm.confluxrpc.com`。
 - 链上金额全部使用 `bigint`；展示层只格式化字符串。
 - `poolAPY()` 原始整数按基点保存在 `PoolPosition.expectedApyBps`；读取失败使用 `null`
   降级，禁止前端根据累计收益或浮点数自行推算。
 - 标准池必须由用户输入并在保存前通过 ABI 读取校验。
 - 钱包直接使用 Fluent 注入 Provider，避免未安装扩展时产生未处理异常。
-- 写交易必须满足 Fluent 已连接、1029、账户匹配、池已校验。
+- 写交易必须满足 Fluent 已连接、钱包 network ID 等于当前 Core 配置、账户匹配、池已
+  校验。
+- 可解质押票数使用 `userSummary.locked` 扣除治理锁定票数；`available` 包含
+  `inQueue`，不能作为可解质押额度。
+- 准备交易后按 `value + gas * gasPrice + storageLimit * 10^18 / 1024` 校验余额，全部
+  使用 `bigint`。
+- 单元测试覆盖网络选择、`inQueue` 解质押门禁和动态交易成本；Playwright 覆盖读取、
+  主题、地址切换与布局，真实钱包写流程另按 `docs/TODO.md` 验证。
 
 ## 构建与部署
 

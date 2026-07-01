@@ -1,7 +1,14 @@
 import { z } from 'zod';
+import { CORE_NETWORK, type CoreNetwork } from '../../config/network';
 import type { AddressBookmark, PoolConfig } from '../../domain/types';
 
-const STORAGE_KEY = 'conflux-pos-dashboard:v1';
+export function storageKeyForCoreNetwork(network: CoreNetwork): string {
+  return network.id === 'testnet'
+    ? 'conflux-pos-dashboard:core-testnet:v1'
+    : 'conflux-pos-dashboard:v1';
+}
+
+const STORAGE_KEY = storageKeyForCoreNetwork(CORE_NETWORK);
 
 const bookmarkSchema = z.object({
   address: z.string(),

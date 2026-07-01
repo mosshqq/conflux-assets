@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { CORE_MAINNET, PORTFOLIO_REFRESH_INTERVAL } from '../config/network';
+import { CORE_NETWORK, PORTFOLIO_REFRESH_INTERVAL } from '../config/network';
 import { addressesEqual, normalizePoolAddress, normalizeUserAddress } from '../domain/address';
 import { formatBasisPoints, formatCfx, votesToDrip } from '../domain/money';
 import { usePools } from '../features/pools/usePools';
@@ -90,7 +90,7 @@ export function PoolDetailPage() {
               </a>
             ) : null}
             <a
-              href={`${CORE_MAINNET.explorerUrl}/address/${pool.address}`}
+              href={`${CORE_NETWORK.explorerUrl}/address/${pool.address}`}
               target="_blank"
               rel="noreferrer"
               className="secondary-button"
