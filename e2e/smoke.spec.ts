@@ -89,10 +89,11 @@ test('dashboard switches between saved addresses', async ({ page }) => {
   );
 });
 
-test('pool sort controls expose the supported fields', async ({ page }) => {
+test('pool sort controls persist the selected fields', async ({ page }) => {
   const address = 'cfx:aajaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaej6bs8mvt';
 
   await page.addInitScript((savedAddress) => {
+    if (window.localStorage.getItem('conflux-pos-dashboard:v1')) return;
     window.localStorage.setItem(
       'conflux-pos-dashboard:v1',
       JSON.stringify({
@@ -116,11 +117,16 @@ test('pool sort controls expose the supported fields', async ({ page }) => {
   await expect(homeSort).toHaveValue('favorite');
   await homeSort.selectOption('total-staked-desc');
   await expect(homeSort).toHaveValue('total-staked-desc');
+  await page.reload();
+  await expect(page.getByLabel('首页 PoS 池排序')).toHaveValue('total-staked-desc');
 
   await page.goto(`/address/${encodeURIComponent(address)}`);
 
+  await expect(page.getByText('Core 总资产')).toBeVisible();
   const positionSort = page.getByLabel('地址 PoS 池排序');
   await expect(positionSort).toHaveValue('favorite');
   await positionSort.selectOption('claimable-asc');
   await expect(positionSort).toHaveValue('claimable-asc');
+  await page.reload();
+  await expect(page.getByLabel('地址 PoS 池排序')).toHaveValue('claimable-asc');
 });

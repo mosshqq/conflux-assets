@@ -29,6 +29,23 @@ export const POS_POOL_ABI = [
   },
   {
     inputs: [{ internalType: 'address', name: 'account', type: 'address' }],
+    name: 'userInQueue',
+    outputs: [
+      {
+        components: [
+          { internalType: 'uint64', name: 'votePower', type: 'uint64' },
+          { internalType: 'uint64', name: 'endBlockNumber', type: 'uint64' },
+        ],
+        internalType: 'struct VotePowerQueue.QueueNode[]',
+        name: '',
+        type: 'tuple[]',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'account', type: 'address' }],
     name: 'userOutQueue',
     outputs: [
       {

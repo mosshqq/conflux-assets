@@ -27,7 +27,7 @@ src/
   config/                 Core 主网/本地测试网、eSpace 主网配置、标准池 ABI
   domain/                 地址、金额、聚合、交易规则与类型
   features/dashboard/     Core 聚合、eSpace 余额、地址切换与列表总额
-  features/pools/         池集合、概览 Query、校验、排序、管理与卡片
+  features/pools/         池集合、概览 Query、校验、排序、生命周期、管理与卡片
   features/theme/         主题解析、Provider、切换控件
   features/wallet/        Fluent Provider、门禁、交易 UI
   infrastructure/conflux/ Core/eSpace RPC、合约读取、交易构造
@@ -43,8 +43,14 @@ e2e/
 
 - `normalizeQueryAddress` 区分 Core/eSpace，并只接受当前 Core 网络对应的地址前缀。
 - Core 经过 `usePortfolio`，每个池使用独立 Query；失败结果不进入聚合。
+- 地址总览总资产由 domain 聚合规则计算：Core 可用余额加成功读取池的有效质押、
+  解质押中、可提取本金和未领取收益；有池尚在首次读取时暂不显示总值，有池读取失败时
+  使用 `≥` 展示已读取下限并明确提示缺失数量。
 - 池持仓查询同时读取 `poolAPY()`，按基点精确展示合约近 7 天年化估算；旧池不支持该
   方法时仅隐藏 APY，不影响持仓读取。
+- 池持仓同时读取标准 `userInQueue()` 和 `userOutQueue()`；池详情按当前区块展示增加
+  质押锁定、可解质押额度、解质押等待和本金提取四阶段时间线。时间按约 2 区块/秒估算，
+  只作提示，状态判断始终使用目标区块和链上字段。
 - eSpace 经过 `useESpaceBalance`，只调用 `eth_getBalance`。
 - 两类 Query 互斥启用，切换路由不能触发错误网络的请求。
 
@@ -85,8 +91,8 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
 ### 持久化与主题
 
 - 主网使用 `conflux-pos-dashboard:v1`，本地 Core 测试网使用
-  `conflux-pos-dashboard:core-testnet:v1`；两者都只保存 `bookmarks`、`customPools`，
-  链上数据不落盘。
+  `conflux-pos-dashboard:core-testnet:v1`；两者都只保存 `bookmarks`、`customPools`、首页
+  与地址明细的池排序偏好，链上数据不落盘。
 - 主题使用独立 key `conflux-assets:theme`，值为 `system | light | dark`。
 - 主题控件使用 Lucide 图标按钮按 `system -> light -> dark` 循环切换。
 - 颜色定义在 `src/styles.css` 的 CSS 变量，Tailwind 只引用语义颜色。

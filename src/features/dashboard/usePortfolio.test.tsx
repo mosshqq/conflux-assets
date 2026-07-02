@@ -30,6 +30,7 @@ const goodPosition: PoolPosition = {
   governanceLockedDrip: 0n,
   governanceUnlockBlock: 0n,
   claimableDrip: 0n,
+  stakeLockQueue: [],
   unlockQueue: [],
 };
 

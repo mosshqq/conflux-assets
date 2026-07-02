@@ -17,6 +17,11 @@ export interface UnlockQueueItem {
   unlockBlock: bigint;
 }
 
+export interface StakeLockQueueItem {
+  votes: bigint;
+  lockBlock: bigint;
+}
+
 export interface PoolPosition {
   pool: PoolConfig;
   expectedApyBps: bigint | null;
@@ -28,6 +33,7 @@ export interface PoolPosition {
   governanceLockedDrip: bigint;
   governanceUnlockBlock: bigint;
   claimableDrip: bigint;
+  stakeLockQueue: StakeLockQueueItem[];
   unlockQueue: UnlockQueueItem[];
 }
 
@@ -37,11 +43,25 @@ export interface PoolOverview {
   totalStakedVotes: bigint;
 }
 
+export type HomePoolSort =
+  'favorite' | 'apy-desc' | 'apy-asc' | 'total-staked-desc' | 'total-staked-asc';
+
+export type PositionPoolSort =
+  | 'favorite'
+  | 'apy-desc'
+  | 'apy-asc'
+  | 'active-stake-desc'
+  | 'active-stake-asc'
+  | 'claimable-desc'
+  | 'claimable-asc';
+
 export interface PortfolioSummary {
   activeDrip: bigint;
   pendingDrip: bigint;
   unlockedDrip: bigint;
   claimableDrip: bigint;
+  principalDrip: bigint;
+  poolTotalDrip: bigint;
 }
 
 export type PoolAction = 'stake' | 'unstake' | 'claim' | 'withdraw';

@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => {
   const contract = {
     userSummary: vi.fn(() => method('0xsummary', [5n, 3n, 2n, 1n, 0n, 9n])),
     userInterest: vi.fn(() => method('0xinterest', 99n)),
+    userInQueue: vi.fn(() => method('0xstake-queue', [[2n, 480n]])),
     userOutQueue: vi.fn(() => method('0xqueue', [[1n, 500n]])),
     userLockInfo: vi.fn(() => method('0xlock', [1000n, 600n])),
     poolName: vi.fn(() => method('0xname', 'Mock Pool')),
@@ -77,6 +78,7 @@ describe('Conflux client', () => {
       governanceLockedDrip: 1000n,
       claimableDrip: 99n,
     });
+    expect(position.stakeLockQueue).toEqual([{ votes: 2n, lockBlock: 480n }]);
     expect(position.unlockQueue).toEqual([{ votes: 1n, unlockBlock: 500n }]);
   });
 

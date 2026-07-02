@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { CORE_NETWORK, PORTFOLIO_REFRESH_INTERVAL } from '../config/network';
 import { addressesEqual, normalizePoolAddress, normalizeUserAddress } from '../domain/address';
 import { formatBasisPoints, formatCfx, votesToDrip } from '../domain/money';
+import { StakingLifecycleTimeline } from '../features/pools/StakingLifecycleTimeline';
 import { usePools } from '../features/pools/usePools';
 import { PoolActions } from '../features/wallet/PoolActions';
 import {
@@ -45,6 +46,7 @@ export function PoolDetailPage() {
     queryKey: ['current-block'],
     queryFn: readCurrentBlock,
     enabled: Boolean(address),
+    refetchInterval: PORTFOLIO_REFRESH_INTERVAL,
   });
 
   if (routeError) {
@@ -147,46 +149,18 @@ export function PoolDetailPage() {
             预期 APY 由池合约基于最近 7 天收益年化估算，不代表未来实际收益。
           </p>
 
-          <section className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-line bg-panel p-5">
-              <h2 className="font-semibold">解质押队列</h2>
-              {positionQuery.data.unlockQueue.length > 0 ? (
-                <div className="mt-4 divide-y divide-line">
-                  {positionQuery.data.unlockQueue.map((item, index) => {
-                    const remaining =
-                      blockQuery.data && item.unlockBlock > blockQuery.data
-                        ? item.unlockBlock - blockQuery.data
-                        : 0n;
-                    return (
-                      <div
-                        key={`${item.unlockBlock}-${index}`}
-                        className="flex justify-between py-3 text-sm"
-                      >
-                        <span>{formatCfx(votesToDrip(item.votes))} CFX</span>
-                        <span className="text-muted">
-                          区块 {item.unlockBlock.toString()}
-                          {remaining > 0n ? ` · 约 ${formatDuration(remaining)}` : ' · 可提取'}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="mt-4 text-sm text-muted">没有待完成的解质押批次。</p>
-              )}
-            </div>
+          <StakingLifecycleTimeline position={positionQuery.data} currentBlock={blockQuery.data} />
 
-            <div className="rounded-2xl border border-line bg-panel p-5">
-              <h2 className="font-semibold">治理锁定</h2>
-              <p className="mt-4 text-2xl font-semibold">
-                {formatCfx(positionQuery.data.governanceLockedDrip)} CFX
-              </p>
-              <p className="mt-2 text-sm text-muted">
-                {positionQuery.data.governanceUnlockBlock > 0n
-                  ? `解锁区块 ${positionQuery.data.governanceUnlockBlock.toString()}`
-                  : '当前没有治理锁定'}
-              </p>
-            </div>
+          <section className="rounded-2xl border border-line bg-panel p-5">
+            <h2 className="font-semibold">治理锁定</h2>
+            <p className="mt-4 text-2xl font-semibold">
+              {formatCfx(positionQuery.data.governanceLockedDrip)} CFX
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              {positionQuery.data.governanceUnlockBlock > 0n
+                ? `解锁区块 ${positionQuery.data.governanceUnlockBlock.toString()}`
+                : '当前没有治理锁定'}
+            </p>
           </section>
 
           <PoolActions
@@ -199,13 +173,4 @@ export function PoolDetailPage() {
       )}
     </div>
   );
-}
-
-function formatDuration(blocks: bigint): string {
-  const seconds = blocks / 2n;
-  const days = seconds / 86_400n;
-  if (days > 0n) return `${days.toString()} 天`;
-  const hours = seconds / 3_600n;
-  if (hours > 0n) return `${hours.toString()} 小时`;
-  return `${(seconds / 60n).toString()} 分钟`;
 }

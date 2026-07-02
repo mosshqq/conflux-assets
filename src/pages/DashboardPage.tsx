@@ -5,14 +5,14 @@ import { MetricCard } from '../components/MetricCard';
 import { CORE_NETWORK } from '../config/network';
 import { normalizeQueryAddress, shortenAddress, type QueryAddressSpace } from '../domain/address';
 import { formatCfx } from '../domain/money';
-import { aggregatePositions, hasPosition } from '../domain/portfolio';
-import type { PoolPosition } from '../domain/types';
+import { aggregatePortfolioTotal, aggregatePositions, hasPosition } from '../domain/portfolio';
+import type { PoolPosition, PositionPoolSort } from '../domain/types';
 import { AddressSwitcher } from '../features/dashboard/AddressSwitcher';
 import { useESpaceBalance } from '../features/dashboard/useESpaceBalance';
 import { usePortfolio } from '../features/dashboard/usePortfolio';
 import { PoolCard } from '../features/pools/PoolCard';
 import { PoolSortSelect } from '../features/pools/PoolSortSelect';
-import { sortPositionIndexes, type PositionPoolSort } from '../features/pools/poolSorting';
+import { sortPositionIndexes } from '../features/pools/poolSorting';
 import { usePools } from '../features/pools/usePools';
 
 const POSITION_POOL_SORT_OPTIONS: Array<{ value: PositionPoolSort; label: string }> = [
@@ -28,10 +28,10 @@ const POSITION_POOL_SORT_OPTIONS: Array<{ value: PositionPoolSort; label: string
 export function DashboardPage() {
   const params = useParams<{ address: string }>();
   const [showAll, setShowAll] = useState(false);
-  const [poolSort, setPoolSort] = useState<PositionPoolSort>('favorite');
   const [alias, setAlias] = useState('');
   const pools = usePools();
-  const { bookmarks, saveBookmark, removeBookmark } = useAppState();
+  const { bookmarks, positionPoolSort, saveBookmark, removeBookmark, setPositionPoolSort } =
+    useAppState();
 
   let address = '';
   let addressSpace: QueryAddressSpace = 'core';
@@ -56,6 +56,12 @@ export function DashboardPage() {
     .map((query) => query.data)
     .filter((position): position is PoolPosition => Boolean(position));
   const summary = aggregatePositions(successfulPositions);
+  const missingPoolCount = positionQueries.filter((query) => query.isError && !query.data).length;
+  const pendingPoolCount = positionQueries.filter((query) => query.isPending && !query.data).length;
+  const totalAssetDrip =
+    balanceQuery.data !== undefined && pendingPoolCount === 0
+      ? aggregatePortfolioTotal(balanceQuery.data, summary)
+      : undefined;
   const isBookmarked = bookmarks.some((item) => item.address === address);
 
   const visiblePoolIndexes = useMemo(() => {
@@ -67,7 +73,7 @@ export function DashboardPage() {
   const sortedVisiblePoolIndexes = sortPositionIndexes(
     visiblePoolIndexes,
     positionQueries.map((query) => query.data),
-    poolSort,
+    positionPoolSort,
   );
 
   function refreshAll() {
@@ -170,7 +176,25 @@ export function DashboardPage() {
           </>
         ) : (
           <>
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <MetricCard
+                label="Core 总资产"
+                value={
+                  totalAssetDrip === undefined
+                    ? '—'
+                    : `${missingPoolCount > 0 ? '≥ ' : ''}${formatCfx(totalAssetDrip, 6)} CFX`
+                }
+                hint={
+                  balanceQuery.data === undefined
+                    ? '等待可用余额读取完成'
+                    : pendingPoolCount > 0
+                      ? `仍有 ${pendingPoolCount} 个池读取中`
+                      : missingPoolCount > 0
+                        ? `${missingPoolCount} 个池读取失败，当前值为已读取资产下限`
+                        : '可用余额 + 池内本金 + 未领取收益'
+                }
+                accent
+              />
               <MetricCard
                 label="Core 可用余额"
                 value={
@@ -188,6 +212,16 @@ export function DashboardPage() {
                 accent
               />
             </section>
+
+            {missingPoolCount > 0 ? (
+              <section className="rounded-2xl border border-warning-border bg-warning-surface p-5">
+                <h2 className="font-semibold text-warning">资产汇总不完整</h2>
+                <p className="mt-2 text-sm leading-6 text-warning-muted">
+                  {missingPoolCount} 个池未能成功读取；总资产以“≥”显示，只包含 Core
+                  可用余额和成功读取池的本金及收益。可在下方对应池卡片单独重试。
+                </p>
+              </section>
+            ) : null}
 
             {pools.length === 0 ? (
               <section className="rounded-2xl border border-warning-border bg-warning-surface p-6">
@@ -209,9 +243,9 @@ export function DashboardPage() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <PoolSortSelect
                       ariaLabel="地址 PoS 池排序"
-                      value={poolSort}
+                      value={positionPoolSort}
                       options={POSITION_POOL_SORT_OPTIONS}
-                      onChange={setPoolSort}
+                      onChange={setPositionPoolSort}
                     />
                     <button
                       type="button"

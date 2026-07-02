@@ -59,6 +59,7 @@ describe('useAddressTotal', () => {
       governanceLockedDrip: 0n,
       governanceUnlockBlock: 0n,
       claimableDrip: 3n,
+      stakeLockQueue: [],
       unlockQueue: [],
     } satisfies PoolPosition);
 
@@ -99,6 +100,7 @@ describe('useAddressTotal', () => {
             governanceLockedDrip: 0n,
             governanceUnlockBlock: 0n,
             claimableDrip: 3n,
+            stakeLockQueue: [],
             unlockQueue: [],
           } satisfies PoolPosition),
     );

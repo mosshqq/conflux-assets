@@ -1,16 +1,9 @@
-import type { PoolOverview, PoolPosition } from '../../domain/types';
-
-export type HomePoolSort =
-  'favorite' | 'apy-desc' | 'apy-asc' | 'total-staked-desc' | 'total-staked-asc';
-
-export type PositionPoolSort =
-  | 'favorite'
-  | 'apy-desc'
-  | 'apy-asc'
-  | 'active-stake-desc'
-  | 'active-stake-asc'
-  | 'claimable-desc'
-  | 'claimable-asc';
+import type {
+  HomePoolSort,
+  PoolOverview,
+  PoolPosition,
+  PositionPoolSort,
+} from '../../domain/types';
 
 type SortDirection = 'asc' | 'desc';
 

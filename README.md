@@ -3,6 +3,9 @@
 Conflux Core Space PoS 资产看板。生产环境使用主网；用户无需连接钱包即可查询地址余额和
 标准 PoS Pool 持仓，连接 Fluent 且网络与地址匹配后可执行完整质押生命周期。
 
+地址总览展示可用余额、质押各阶段、收益和总资产；池详情按实时区块展示增加质押锁定、
+可解质押额度、解质押等待和本金可提取进度。
+
 ## 在线访问
 
 [https://mosshqq.github.io/conflux-assets/](https://mosshqq.github.io/conflux-assets/)

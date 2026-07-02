@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { DRIP_PER_CFX, DRIP_PER_VOTE } from './money';
-import { aggregatePositions, hasPosition, maxUnstakeVotes } from './portfolio';
+import {
+  aggregatePortfolioTotal,
+  aggregatePositions,
+  hasPosition,
+  maxUnstakeVotes,
+} from './portfolio';
 import type { PoolPosition } from './types';
 
 function position(overrides: Partial<PoolPosition> = {}): PoolPosition {
@@ -20,6 +25,7 @@ function position(overrides: Partial<PoolPosition> = {}): PoolPosition {
     governanceLockedDrip: 0n,
     governanceUnlockBlock: 0n,
     claimableDrip: DRIP_PER_CFX,
+    stakeLockQueue: [],
     unlockQueue: [],
     ...overrides,
   };
@@ -36,6 +42,11 @@ describe('portfolio', () => {
     expect(summary.pendingDrip).toBe(DRIP_PER_VOTE);
     expect(summary.unlockedDrip).toBe(DRIP_PER_VOTE);
     expect(summary.claimableDrip).toBe(2n * DRIP_PER_CFX);
+    expect(summary.principalDrip).toBe(7n * DRIP_PER_VOTE);
+    expect(summary.poolTotalDrip).toBe(7n * DRIP_PER_VOTE + 2n * DRIP_PER_CFX);
+    expect(aggregatePortfolioTotal(10n * DRIP_PER_CFX, summary)).toBe(
+      7n * DRIP_PER_VOTE + 12n * DRIP_PER_CFX,
+    );
   });
 
   it('deducts governance locks from unstakeable votes', () => {

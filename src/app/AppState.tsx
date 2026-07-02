@@ -4,7 +4,7 @@ import {
   readPersistedState,
   writePersistedState,
 } from '../infrastructure/storage/localState';
-import type { AddressBookmark, PoolConfig } from '../domain/types';
+import type { AddressBookmark, HomePoolSort, PoolConfig, PositionPoolSort } from '../domain/types';
 import { AppStateContext } from './AppStateContext';
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
@@ -47,16 +47,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const setHomePoolSort = useCallback((homePoolSort: HomePoolSort) => {
+    setState((current) => ({ ...current, homePoolSort }));
+  }, []);
+
+  const setPositionPoolSort = useCallback((positionPoolSort: PositionPoolSort) => {
+    setState((current) => ({ ...current, positionPoolSort }));
+  }, []);
+
   const value = useMemo(
     () => ({
       bookmarks: state.bookmarks,
       customPools: state.customPools,
+      homePoolSort: state.homePoolSort,
+      positionPoolSort: state.positionPoolSort,
       saveBookmark,
       removeBookmark,
       addCustomPool,
       removeCustomPool,
+      setHomePoolSort,
+      setPositionPoolSort,
     }),
-    [addCustomPool, removeBookmark, removeCustomPool, saveBookmark, state],
+    [
+      addCustomPool,
+      removeBookmark,
+      removeCustomPool,
+      saveBookmark,
+      setHomePoolSort,
+      setPositionPoolSort,
+      state,
+    ],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

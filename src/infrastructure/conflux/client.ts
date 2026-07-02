@@ -56,21 +56,29 @@ export async function readPoolPosition(
   userAddress: string,
 ): Promise<PoolPosition> {
   const contract = contractAt(pool.address);
-  const [summary, interest, queue, lockInfo, expectedApyBps] = await Promise.all([
-    callMethod(contract.userSummary(userAddress)),
-    callMethod(contract.userInterest(userAddress)),
-    callMethod(contract.userOutQueue(userAddress)),
-    callMethod(contract.userLockInfo(userAddress)),
-    readExpectedPoolApy(contract),
-  ]);
+  const [summary, interest, stakeQueue, unlockQueueData, lockInfo, expectedApyBps] =
+    await Promise.all([
+      callMethod(contract.userSummary(userAddress)),
+      callMethod(contract.userInterest(userAddress)),
+      callMethod(contract.userInQueue(userAddress)),
+      callMethod(contract.userOutQueue(userAddress)),
+      callMethod(contract.userLockInfo(userAddress)),
+      readExpectedPoolApy(contract),
+    ]);
 
   const totalVotes = toBigInt(field(summary, 'votes', 0) ?? 0);
   const activeVotes = toBigInt(field(summary, 'available', 1) ?? 0);
   const lockedVotes = toBigInt(field(summary, 'locked', 2) ?? 0);
   const unlockedVotes = toBigInt(field(summary, 'unlocked', 3) ?? 0);
   const pendingVotesRaw = totalVotes - activeVotes - unlockedVotes;
-  const unlockQueue: UnlockQueueItem[] = Array.isArray(queue)
-    ? queue.map((item) => ({
+  const stakeLockQueue = Array.isArray(stakeQueue)
+    ? stakeQueue.map((item) => ({
+        votes: toBigInt(field(item, 'votePower', 0) ?? 0),
+        lockBlock: toBigInt(field(item, 'endBlockNumber', 1) ?? 0),
+      }))
+    : [];
+  const unlockQueue: UnlockQueueItem[] = Array.isArray(unlockQueueData)
+    ? unlockQueueData.map((item) => ({
         votes: toBigInt(field(item, 'votePower', 0) ?? 0),
         unlockBlock: toBigInt(field(item, 'endBlockNumber', 1) ?? 0),
       }))
@@ -87,6 +95,7 @@ export async function readPoolPosition(
     governanceLockedDrip: toBigInt(field(lockInfo, 'amount', 0) ?? 0),
     governanceUnlockBlock: toBigInt(field(lockInfo, 'unlockBlockNumber', 1) ?? 0),
     claimableDrip: toBigInt(interest),
+    stakeLockQueue,
     unlockQueue,
   };
 }

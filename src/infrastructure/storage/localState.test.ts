@@ -54,9 +54,21 @@ describe('local state', () => {
           source: 'custom' as const,
         },
       ],
+      homePoolSort: 'total-staked-desc' as const,
+      positionPoolSort: 'claimable-asc' as const,
     };
     writePersistedState(state, storage);
     expect(readPersistedState(storage)).toEqual(state);
+  });
+
+  it('adds default sort preferences to existing version 1 data', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      'conflux-pos-dashboard:v1',
+      JSON.stringify({ version: 1, bookmarks: [], customPools: [] }),
+    );
+
+    expect(readPersistedState(storage)).toEqual(EMPTY_PERSISTED_STATE);
   });
 
   it('recovers safely from malformed or future data', () => {

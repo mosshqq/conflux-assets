@@ -3,9 +3,10 @@ import { useAppState } from '../../app/useAppState';
 import { CORE_NETWORK } from '../../config/network';
 import { decodeCoreAddress, normalizePoolAddress, shortenAddress } from '../../domain/address';
 import { formatBasisPoints, formatCfx, votesToDrip } from '../../domain/money';
+import type { HomePoolSort } from '../../domain/types';
 import { validateStandardPool } from '../../infrastructure/conflux/client';
 import { PoolSortSelect } from './PoolSortSelect';
-import { sortPoolOverviewIndexes, type HomePoolSort } from './poolSorting';
+import { sortPoolOverviewIndexes } from './poolSorting';
 import { usePoolOverviews } from './usePoolOverviews';
 
 const HOME_POOL_SORT_OPTIONS: Array<{ value: HomePoolSort; label: string }> = [
@@ -17,13 +18,13 @@ const HOME_POOL_SORT_OPTIONS: Array<{ value: HomePoolSort; label: string }> = [
 ];
 
 export function PoolManager() {
-  const { customPools, addCustomPool, removeCustomPool } = useAppState();
+  const { customPools, homePoolSort, addCustomPool, removeCustomPool, setHomePoolSort } =
+    useAppState();
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [website, setWebsite] = useState('');
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
-  const [sort, setSort] = useState<HomePoolSort>('favorite');
   const overviewQueries = usePoolOverviews(customPools);
   const allAddresses = useMemo(
     () => new Set(customPools.map((pool) => pool.address)),
@@ -32,7 +33,7 @@ export function PoolManager() {
   const sortedPoolIndexes = sortPoolOverviewIndexes(
     customPools.map((_, index) => index),
     overviewQueries.map((query) => query.data),
-    sort,
+    homePoolSort,
   );
 
   async function handleSubmit(event: FormEvent) {
@@ -109,9 +110,9 @@ export function PoolManager() {
           <div className="mt-5 flex justify-end">
             <PoolSortSelect
               ariaLabel="首页 PoS 池排序"
-              value={sort}
+              value={homePoolSort}
               options={HOME_POOL_SORT_OPTIONS}
-              onChange={setSort}
+              onChange={setHomePoolSort}
             />
           </div>
           <div className="mt-3 divide-y divide-line border-t border-line">
