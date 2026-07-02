@@ -11,11 +11,24 @@ import { AddressSwitcher } from '../features/dashboard/AddressSwitcher';
 import { useESpaceBalance } from '../features/dashboard/useESpaceBalance';
 import { usePortfolio } from '../features/dashboard/usePortfolio';
 import { PoolCard } from '../features/pools/PoolCard';
+import { PoolSortSelect } from '../features/pools/PoolSortSelect';
+import { sortPositionIndexes, type PositionPoolSort } from '../features/pools/poolSorting';
 import { usePools } from '../features/pools/usePools';
+
+const POSITION_POOL_SORT_OPTIONS: Array<{ value: PositionPoolSort; label: string }> = [
+  { value: 'favorite', label: '收藏顺序' },
+  { value: 'apy-desc', label: 'APY：高到低' },
+  { value: 'apy-asc', label: 'APY：低到高' },
+  { value: 'active-stake-desc', label: '有效质押：高到低' },
+  { value: 'active-stake-asc', label: '有效质押：低到高' },
+  { value: 'claimable-desc', label: '未领取收益：高到低' },
+  { value: 'claimable-asc', label: '未领取收益：低到高' },
+];
 
 export function DashboardPage() {
   const params = useParams<{ address: string }>();
   const [showAll, setShowAll] = useState(false);
+  const [poolSort, setPoolSort] = useState<PositionPoolSort>('favorite');
   const [alias, setAlias] = useState('');
   const pools = usePools();
   const { bookmarks, saveBookmark, removeBookmark } = useAppState();
@@ -51,6 +64,11 @@ export function DashboardPage() {
       .map((_, index) => index)
       .filter((index) => positionQueries[index]?.data && hasPosition(positionQueries[index].data!));
   }, [pools, positionQueries, showAll]);
+  const sortedVisiblePoolIndexes = sortPositionIndexes(
+    visiblePoolIndexes,
+    positionQueries.map((query) => query.data),
+    poolSort,
+  );
 
   function refreshAll() {
     void balanceQuery.refetch();
@@ -180,7 +198,7 @@ export function DashboardPage() {
               </section>
             ) : (
               <section>
-                <div className="mb-4 flex items-end justify-between gap-3">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <h2 className="text-xl font-semibold">{showAll ? '全部池' : '有持仓的池'}</h2>
                     <p className="mt-1 text-sm text-muted">
@@ -188,18 +206,26 @@ export function DashboardPage() {
                       {blockQuery.data ? ` · 当前区块 ${blockQuery.data.toString()}` : ''}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAll((value) => !value)}
-                    className="secondary-button"
-                  >
-                    {showAll ? '只看持仓' : '查看全部池'}
-                  </button>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <PoolSortSelect
+                      ariaLabel="地址 PoS 池排序"
+                      value={poolSort}
+                      options={POSITION_POOL_SORT_OPTIONS}
+                      onChange={setPoolSort}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAll((value) => !value)}
+                      className="secondary-button"
+                    >
+                      {showAll ? '只看持仓' : '查看全部池'}
+                    </button>
+                  </div>
                 </div>
 
-                {visiblePoolIndexes.length > 0 ? (
+                {sortedVisiblePoolIndexes.length > 0 ? (
                   <div className="grid gap-4 lg:grid-cols-2">
-                    {visiblePoolIndexes.map((index) => {
+                    {sortedVisiblePoolIndexes.map((index) => {
                       const pool = pools[index];
                       const query = positionQueries[index];
                       return (

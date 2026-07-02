@@ -2,7 +2,19 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useAppState } from '../../app/useAppState';
 import { CORE_NETWORK } from '../../config/network';
 import { decodeCoreAddress, normalizePoolAddress, shortenAddress } from '../../domain/address';
+import { formatBasisPoints, formatCfx, votesToDrip } from '../../domain/money';
 import { validateStandardPool } from '../../infrastructure/conflux/client';
+import { PoolSortSelect } from './PoolSortSelect';
+import { sortPoolOverviewIndexes, type HomePoolSort } from './poolSorting';
+import { usePoolOverviews } from './usePoolOverviews';
+
+const HOME_POOL_SORT_OPTIONS: Array<{ value: HomePoolSort; label: string }> = [
+  { value: 'favorite', label: '收藏顺序' },
+  { value: 'apy-desc', label: 'APY：高到低' },
+  { value: 'apy-asc', label: 'APY：低到高' },
+  { value: 'total-staked-desc', label: '总质押：高到低' },
+  { value: 'total-staked-asc', label: '总质押：低到高' },
+];
 
 export function PoolManager() {
   const { customPools, addCustomPool, removeCustomPool } = useAppState();
@@ -11,9 +23,16 @@ export function PoolManager() {
   const [website, setWebsite] = useState('');
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
+  const [sort, setSort] = useState<HomePoolSort>('favorite');
+  const overviewQueries = usePoolOverviews(customPools);
   const allAddresses = useMemo(
     () => new Set(customPools.map((pool) => pool.address)),
     [customPools],
+  );
+  const sortedPoolIndexes = sortPoolOverviewIndexes(
+    customPools.map((_, index) => index),
+    overviewQueries.map((query) => query.data),
+    sort,
   );
 
   async function handleSubmit(event: FormEvent) {
@@ -86,25 +105,76 @@ export function PoolManager() {
       {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
 
       {customPools.length > 0 ? (
-        <div className="mt-5 divide-y divide-line border-t border-line">
-          {customPools.map((pool) => (
-            <div key={pool.id} className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="font-medium">{pool.name}</p>
-                <p className="truncate font-mono text-xs text-muted">
-                  {shortenAddress(pool.address, 16, 12)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => removeCustomPool(pool.address)}
-                className="secondary-button text-danger"
-              >
-                取消收藏
-              </button>
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="mt-5 flex justify-end">
+            <PoolSortSelect
+              ariaLabel="首页 PoS 池排序"
+              value={sort}
+              options={HOME_POOL_SORT_OPTIONS}
+              onChange={setSort}
+            />
+          </div>
+          <div className="mt-3 divide-y divide-line border-t border-line">
+            {sortedPoolIndexes.map((index) => {
+              const pool = customPools[index];
+              const query = overviewQueries[index];
+              const overview = query.data;
+
+              return (
+                <div
+                  key={pool.id}
+                  className="grid gap-3 py-4 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">{pool.name}</p>
+                    <p className="truncate font-mono text-xs text-muted">
+                      {shortenAddress(pool.address, 16, 12)}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-5 text-sm sm:min-w-72">
+                    <div>
+                      <p className="text-xs text-muted" title="由池合约按最近 7 天收益年化估算">
+                        预期 APY
+                      </p>
+                      <p className="mt-1 font-medium text-accent">
+                        {overview?.expectedApyBps === null || overview?.expectedApyBps === undefined
+                          ? '—'
+                          : formatBasisPoints(overview.expectedApyBps)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted">池总质押</p>
+                      <p className="mt-1 font-medium">
+                        {overview
+                          ? `${formatCfx(votesToDrip(overview.totalStakedVotes))} CFX`
+                          : '—'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    {query.isPending ? <span className="text-xs text-muted">加载中…</span> : null}
+                    {query.isError ? (
+                      <button
+                        type="button"
+                        onClick={() => void query.refetch()}
+                        className="text-sm text-danger underline"
+                      >
+                        读取失败，重试
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => removeCustomPool(pool.address)}
+                      className="secondary-button text-danger"
+                    >
+                      取消收藏
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       ) : null}
     </section>
   );

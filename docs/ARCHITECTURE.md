@@ -27,7 +27,7 @@ src/
   config/                 Core 主网/本地测试网、eSpace 主网配置、标准池 ABI
   domain/                 地址、金额、聚合、交易规则与类型
   features/dashboard/     Core 聚合、eSpace 余额、地址切换与列表总额
-  features/pools/         池集合、校验、管理与卡片
+  features/pools/         池集合、概览 Query、校验、排序、管理与卡片
   features/theme/         主题解析、Provider、切换控件
   features/wallet/        Fluent Provider、门禁、交易 UI
   infrastructure/conflux/ Core/eSpace RPC、合约读取、交易构造
@@ -57,6 +57,14 @@ e2e/
   已收藏池中成功读取的未领取收益，eSpace 仅为原生可用余额。
 - 地址总额查询复用当前详情的 TanStack Query key；单池失败只标记部分读取失败，不影响
   Core 余额和其他池收益。
+
+### 池概览与排序
+
+- 首页 `usePoolOverviews` 为每个收藏池建立独立 `['pool-overview', pool.address]` Query，
+  读取 `poolSummary().available` 和 `poolAPY()`；单池失败不影响其他池。
+- `poolSorting.ts` 集中实现首页与地址明细排序；页面和展示组件只传入排序选项。
+- 首页可按 APY、池总质押、收藏顺序排序；地址明细可按 APY、`activeVotes`、未领取收益
+  和收藏顺序排序。比较使用 `bigint`，缺失值置后，同值保持原顺序。
 
 ### 写交易
 
@@ -101,8 +109,9 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
   `inQueue`，不能作为可解质押额度。
 - 准备交易后按 `value + gas * gasPrice + storageLimit * 10^18 / 1024` 校验余额，全部
   使用 `bigint`。
-- 单元测试覆盖网络选择、`inQueue` 解质押门禁和动态交易成本；Playwright 覆盖读取、
-  主题、地址切换与布局，真实钱包写流程另按 `docs/TODO.md` 验证。
+- 单元测试覆盖网络选择、池查询/排序、`inQueue` 解质押门禁和动态交易成本；Playwright
+  覆盖读取范围、池排序控件、主题、地址切换与布局。真实钱包写流程另按
+  `docs/TODO.md` 验证。
 
 ## 构建与部署
 

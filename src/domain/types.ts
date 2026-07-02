@@ -31,6 +31,12 @@ export interface PoolPosition {
   unlockQueue: UnlockQueueItem[];
 }
 
+export interface PoolOverview {
+  pool: PoolConfig;
+  expectedApyBps: bigint | null;
+  totalStakedVotes: bigint;
+}
+
 export interface PortfolioSummary {
   activeDrip: bigint;
   pendingDrip: bigint;

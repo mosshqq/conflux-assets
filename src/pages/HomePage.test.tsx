@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -8,15 +9,24 @@ import { HomePage } from './HomePage';
 describe('HomePage', () => {
   beforeEach(() => window.localStorage.clear());
 
+  function renderPage() {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AppStateProvider>
+            <HomePage />
+          </AppStateProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+  }
+
   it('validates Conflux mainnet addresses before navigation', async () => {
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <AppStateProvider>
-          <HomePage />
-        </AppStateProvider>
-      </MemoryRouter>,
-    );
+    renderPage();
 
     await user.type(screen.getByLabelText('Conflux 地址'), '0x1234');
     await user.click(screen.getByRole('button', { name: '查询资产' }));
@@ -24,13 +34,7 @@ describe('HomePage', () => {
   });
 
   it('starts with no saved pools', () => {
-    render(
-      <MemoryRouter>
-        <AppStateProvider>
-          <HomePage />
-        </AppStateProvider>
-      </MemoryRouter>,
-    );
+    renderPage();
     expect(screen.getByText('已收藏 0 个')).toBeInTheDocument();
   });
 });

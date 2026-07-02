@@ -5,6 +5,7 @@ import { addGasMargin, DRIP_PER_VOTE, toBigInt, toHex } from '../../domain/money
 import type {
   PoolAction,
   PoolConfig,
+  PoolOverview,
   PoolPosition,
   PreparedTransaction,
   UnlockQueueItem,
@@ -87,6 +88,20 @@ export async function readPoolPosition(
     governanceUnlockBlock: toBigInt(field(lockInfo, 'unlockBlockNumber', 1) ?? 0),
     claimableDrip: toBigInt(interest),
     unlockQueue,
+  };
+}
+
+export async function readPoolOverview(pool: PoolConfig): Promise<PoolOverview> {
+  const contract = contractAt(pool.address);
+  const [summary, expectedApyBps] = await Promise.all([
+    callMethod(contract.poolSummary()),
+    readExpectedPoolApy(contract),
+  ]);
+
+  return {
+    pool,
+    expectedApyBps,
+    totalStakedVotes: toBigInt(field(summary, 'available', 0) ?? 0),
   };
 }
 

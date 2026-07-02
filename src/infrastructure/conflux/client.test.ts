@@ -47,6 +47,7 @@ import {
   preparePoolTransaction,
   readCfxBalance,
   readCurrentBlock,
+  readPoolOverview,
   readPoolPosition,
   validateStandardPool,
 } from './client';
@@ -90,6 +91,27 @@ describe('Conflux client', () => {
       expectedApyBps: null,
       activeVotes: 3n,
       claimableDrip: 99n,
+    });
+  });
+
+  it('reads the pool APY and total staked votes for the home overview', async () => {
+    await expect(readPoolOverview(POOL)).resolves.toEqual({
+      pool: POOL,
+      expectedApyBps: 1290n,
+      totalStakedVotes: 10n,
+    });
+  });
+
+  it('keeps the total stake available when an older pool does not expose APY', async () => {
+    mocks.contract.poolAPY.mockImplementationOnce(() => ({
+      data: '0xapy',
+      call: vi.fn().mockRejectedValue(new Error('method not found')),
+      estimateGasAndCollateral: vi.fn(),
+    }));
+
+    await expect(readPoolOverview(POOL)).resolves.toMatchObject({
+      expectedApyBps: null,
+      totalStakedVotes: 10n,
     });
   });
 

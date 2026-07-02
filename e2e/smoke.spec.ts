@@ -88,3 +88,39 @@ test('dashboard switches between saved addresses', async ({ page }) => {
     'page',
   );
 });
+
+test('pool sort controls expose the supported fields', async ({ page }) => {
+  const address = 'cfx:aajaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaej6bs8mvt';
+
+  await page.addInitScript((savedAddress) => {
+    window.localStorage.setItem(
+      'conflux-pos-dashboard:v1',
+      JSON.stringify({
+        version: 1,
+        bookmarks: [],
+        customPools: [
+          {
+            id: 'custom:test',
+            name: '测试池',
+            address: savedAddress,
+            source: 'custom',
+          },
+        ],
+      }),
+    );
+  }, address);
+
+  await page.goto('/');
+
+  const homeSort = page.getByLabel('首页 PoS 池排序');
+  await expect(homeSort).toHaveValue('favorite');
+  await homeSort.selectOption('total-staked-desc');
+  await expect(homeSort).toHaveValue('total-staked-desc');
+
+  await page.goto(`/address/${encodeURIComponent(address)}`);
+
+  const positionSort = page.getByLabel('地址 PoS 池排序');
+  await expect(positionSort).toHaveValue('favorite');
+  await positionSort.selectOption('claimable-asc');
+  await expect(positionSort).toHaveValue('claimable-asc');
+});
