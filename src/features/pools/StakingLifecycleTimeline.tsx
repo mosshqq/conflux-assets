@@ -11,6 +11,10 @@ export function StakingLifecycleTimeline({
   currentBlock?: bigint;
 }) {
   const unstakeableVotes = maxUnstakeVotes(position);
+  const pendingStakeLocks =
+    currentBlock === undefined
+      ? []
+      : position.stakeLockQueue.filter((item) => item.lockBlock > currentBlock);
 
   return (
     <section className="rounded-2xl border border-line bg-panel p-5">
@@ -28,9 +32,11 @@ export function StakingLifecycleTimeline({
 
       <ol className="mt-6 space-y-0">
         <TimelineStage title="1. 增加质押锁定">
-          {position.stakeLockQueue.length > 0 ? (
+          {currentBlock === undefined ? (
+            <p className="text-sm text-muted">正在读取当前区块以确认锁定状态…</p>
+          ) : pendingStakeLocks.length > 0 ? (
             <QueueList>
-              {position.stakeLockQueue.map((item, index) => (
+              {pendingStakeLocks.map((item, index) => (
                 <QueueRow
                   key={`${item.lockBlock}-${index}`}
                   amount={`${formatCfx(votesToDrip(item.votes))} CFX`}

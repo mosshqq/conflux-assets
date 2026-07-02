@@ -15,7 +15,10 @@ const position: PoolPosition = {
   governanceLockedDrip: DRIP_PER_VOTE,
   governanceUnlockBlock: 300n,
   claimableDrip: 0n,
-  stakeLockQueue: [{ votes: 1n, lockBlock: 120n }],
+  stakeLockQueue: [
+    { votes: 1n, lockBlock: 90n },
+    { votes: 1n, lockBlock: 120n },
+  ],
   unlockQueue: [{ votes: 1n, unlockBlock: 160n }],
 };
 
@@ -25,6 +28,7 @@ describe('StakingLifecycleTimeline', () => {
 
     expect(screen.getByText('当前区块 100')).toBeInTheDocument();
     expect(screen.getByText('区块 120 · 约不到 1 分钟')).toBeInTheDocument();
+    expect(screen.queryByText('区块 90 · 已完成')).not.toBeInTheDocument();
     expect(screen.getByText('1,000 CFX', { selector: '.text-accent' })).toBeInTheDocument();
     expect(screen.getByText('区块 160 · 约不到 1 分钟')).toBeInTheDocument();
     expect(screen.getByText('1,000 CFX 可提取')).toBeInTheDocument();
