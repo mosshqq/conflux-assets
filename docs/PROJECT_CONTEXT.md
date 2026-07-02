@@ -59,8 +59,7 @@
 ## 发布与验证状态
 
 - `main` 通过 GitHub Pages 自动部署到 `https://mosshqq.github.io/conflux-assets/`。
-- 当前工作区的池概览与排序功能已完成但尚未提交、推送或发布；生产站点要等 `main`
-  更新及 Pages 工作流成功后才包含这些改动。
+- 池概览与排序功能已合入 `main` 并通过 GitHub Pages 发布到生产站点。
 - 本地完整验收为 53 项单元测试、6 项 Playwright E2E，以及类型、Lint、格式和构建。
 - 浏览器已使用真实标准池数据验证首页 APY/总质押，并在桌面和 375px 视口检查两处
   排序控件与布局，无横向溢出。
