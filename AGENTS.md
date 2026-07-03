@@ -11,7 +11,8 @@
 
 - 生产构建的 Core Space 只支持主网 network ID 1029；本地 `pnpm dev:testnet` 使用测试网
   network ID 1。eSpace 始终只支持主网 chain ID 1030。
-- eSpace 当前只读原生 CFX 余额，不扫描池、不连接钱包、不发送交易。
+- eSpace 只读原生 CFX 余额和 vSwap 管理的 V3 NFT 仓位，不连接钱包、不发送交易；
+  vSwap 多 token 资产不得折算进地址列表总 CFX。
 - 链上金额、Drip、票数和收益只能用 `bigint` 或十进制字符串，禁止浮点数。
 - 源码禁止预置池；池地址必须由用户输入并通过标准 PoS Pool ABI 校验。
 - Core 写交易必须同时满足：Fluent 已连接、钱包网络等于当前 Core 配置、账户等于查看
@@ -23,6 +24,8 @@
 - SDK/RPC 直发只能验证链上行为；涉及 Fluent 确认、页面状态和 Query 刷新的任务，必须
   使用本地测试网 UI 完成后才能标记为端到端验证通过。
 - 单池 RPC 异常必须隔离，不能中断 Core 余额或其他池查询。
+- 单个 vSwap 仓位或可选手续费/奖励读取失败必须隔离，不能中断 eSpace 原生余额或其他
+  仓位；汇总不完整时必须以 `≥` 标识成功读取部分的下限。
 - 池预期 APY 只能读取标准池 `poolAPY()` 并按基点展示；旧池不支持时显示不可用，不得
   让 APY 失败中断该池持仓查询，也不得改用前端浮点估算。
 - 首页池总质押只能读取 `poolSummary().available` 票数并按 `1 票 = 1000 CFX` 换算。

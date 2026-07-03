@@ -30,11 +30,23 @@ export function parseCfx(value: string): bigint {
 }
 
 export function formatCfx(drip: bigint, maximumFractionDigits = 4): string {
-  const negative = drip < 0n;
-  const absolute = negative ? -drip : drip;
-  const whole = absolute / DRIP_PER_CFX;
-  const fraction = (absolute % DRIP_PER_CFX).toString().padStart(CFX_DECIMALS, '0');
-  const trimmed = fraction.slice(0, maximumFractionDigits).replace(/0+$/, '');
+  return formatTokenAmount(drip, CFX_DECIMALS, maximumFractionDigits);
+}
+
+export function formatTokenAmount(
+  value: bigint,
+  decimals: number,
+  maximumFractionDigits = 6,
+): string {
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 255) {
+    throw new Error('代币精度无效');
+  }
+  const negative = value < 0n;
+  const absolute = negative ? -value : value;
+  const unit = 10n ** BigInt(decimals);
+  const whole = absolute / unit;
+  const fraction = (absolute % unit).toString().padStart(decimals, '0');
+  const trimmed = fraction.slice(0, Math.max(0, maximumFractionDigits)).replace(/0+$/, '');
   return `${negative ? '-' : ''}${whole.toLocaleString('en-US')}${trimmed ? `.${trimmed}` : ''}`;
 }
 

@@ -9,7 +9,7 @@ Pages
   -> feature components / hooks
     -> domain rules
       -> Core RPC + standard PoS Pool contracts
-      -> eSpace JSON-RPC (balance only)
+      -> eSpace JSON-RPC + vSwap staker subgraph (read only)
       -> Fluent injected provider (Core writes only)
   -> versioned localStorage
   -> theme preference localStorage
@@ -24,9 +24,9 @@ Pages
 src/
   app/                    Provider、路由、业务状态上下文
   components/             无链上副作用的通用 UI
-  config/                 Core 主网/本地测试网、eSpace 主网配置、标准池 ABI
+  config/                 Core/eSpace 网络、标准 PoS 池和 vSwap 精简 ABI
   domain/                 地址、金额、聚合、交易规则与类型
-  features/dashboard/     Core 聚合、eSpace 余额、地址切换与列表总额
+  features/dashboard/     Core 聚合、eSpace 余额/vSwap 仓位、地址切换与列表总额
   features/pools/         池集合、概览 Query、校验、排序、生命周期、管理与卡片
   features/theme/         主题解析、Provider、切换控件
   features/wallet/        Fluent Provider、门禁、交易 UI
@@ -52,7 +52,13 @@ e2e/
   质押锁定、可解质押额度、解质押等待和本金提取四阶段时间线。时间按约 2 区块/秒估算，
   只作提示，状态判断始终使用目标区块和链上字段；`inQueue` 中目标区块已到达但尚未被
   合约清理的节点不再作为“锁定中”展示。
-- eSpace 经过 `useESpaceBalance`，只调用 `eth_getBalance`。
+- eSpace 原生余额经过 `useESpaceBalance`，只调用 `eth_getBalance`。
+- vSwap 经过 `useVSwapPositions`：先由 staker subgraph 分页发现 `isManaged: true` 的 NFT，
+  再为每个仓位建立独立 Query，使用 viem 读取 Position Manager、池、ERC-20 元数据和
+  Staker。单仓位失败不能中断原生余额或其他仓位。
+- 仓位 token 数量使用 Uniswap V3 TickMath/Q96 bigint 公式计算；手续费通过只读模拟
+  `AutoPositionManager.collect` 获取，farming 奖励按 reward token 合并。多 token 汇总
+  不折算成美元或 CFX，失败仓位导致汇总以已读取下限展示。
 - 两类 Query 互斥启用，切换路由不能触发错误网络的请求。
 
 ### 地址列表
@@ -64,6 +70,7 @@ e2e/
   已收藏池中成功读取的未领取收益，eSpace 仅为原生可用余额。
 - 地址总额查询复用当前详情的 TanStack Query key；单池失败只标记部分读取失败，不影响
   Core 余额和其他池收益。
+- 地址列表的 eSpace 总 CFX 仍只使用原生余额，不包含 vSwap 仓位 token 或奖励。
 
 ### 池概览与排序
 
@@ -105,6 +112,8 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
 - Core 本地测试网模式：network ID 1，`https://test.confluxrpc.com`；仅
   `pnpm dev:testnet` 生效，生产构建即使使用同名 Vite mode 也强制回退主网。
 - eSpace：chain ID 1030，`https://evm.confluxrpc.com`。
+- vSwap：固定读取 eSpace 主网 Position Manager、Auto Position Manager、V3 Staker
+  及其只读 subgraph；不连接钱包、不发送交易。
 - 链上金额全部使用 `bigint`；展示层只格式化字符串。
 - `poolAPY()` 原始整数按基点保存在 `PoolPosition.expectedApyBps`；读取失败使用 `null`
   降级，禁止前端根据累计收益或浮点数自行推算。

@@ -6,10 +6,12 @@ import { CORE_NETWORK } from '../config/network';
 import { normalizeQueryAddress, shortenAddress, type QueryAddressSpace } from '../domain/address';
 import { formatCfx } from '../domain/money';
 import { aggregatePortfolioTotal, aggregatePositions, hasPosition } from '../domain/portfolio';
-import type { PoolPosition, PositionPoolSort } from '../domain/types';
+import type { ESpaceAddress, PoolPosition, PositionPoolSort } from '../domain/types';
 import { AddressSwitcher } from '../features/dashboard/AddressSwitcher';
+import { VSwapPositionsSection } from '../features/dashboard/VSwapPositionsSection';
 import { useESpaceBalance } from '../features/dashboard/useESpaceBalance';
 import { usePortfolio } from '../features/dashboard/usePortfolio';
+import { useVSwapPositions } from '../features/dashboard/useVSwapPositions';
 import { PoolCard } from '../features/pools/PoolCard';
 import { PoolSortSelect } from '../features/pools/PoolSortSelect';
 import { sortPositionIndexes } from '../features/pools/poolSorting';
@@ -51,6 +53,9 @@ export function DashboardPage() {
     positionQueries,
   } = usePortfolio(!addressError && !isESpace ? address : '', pools);
   const eSpaceBalanceQuery = useESpaceBalance(!addressError && isESpace ? address : '');
+  const vSwapQueries = useVSwapPositions(
+    !addressError && isESpace ? (address as ESpaceAddress) : '',
+  );
   const balanceQuery = isESpace ? eSpaceBalanceQuery : coreBalanceQuery;
   const successfulPositions = positionQueries
     .map((query) => query.data)
@@ -78,7 +83,11 @@ export function DashboardPage() {
 
   function refreshAll() {
     void balanceQuery.refetch();
-    if (isESpace) return;
+    if (isESpace) {
+      void vSwapQueries.discoveryQuery.refetch();
+      for (const query of vSwapQueries.positionQueries) void query.refetch();
+      return;
+    }
     void blockQuery.refetch();
     for (const query of positionQueries) void query.refetch();
   }
@@ -158,8 +167,8 @@ export function DashboardPage() {
             <section className="rounded-2xl border border-accent/25 bg-accent/[0.07] p-6">
               <h2 className="font-semibold text-accent">当前为 eSpace 余额查询</h2>
               <p className="mt-2 text-sm leading-6 text-muted">
-                当前仅查询 eSpace 主网原生 CFX 余额，暂不支持代币、PoS
-                持仓、池详情、钱包连接或交易。
+                当前查询 eSpace 主网原生 CFX 余额及 vSwap LP Farming 仓位。多种代币资产不折算进总
+                CFX，暂不支持钱包连接或交易。
               </p>
             </section>
 
@@ -173,6 +182,8 @@ export function DashboardPage() {
                 accent
               />
             </section>
+
+            <VSwapPositionsSection {...vSwapQueries} />
           </>
         ) : (
           <>

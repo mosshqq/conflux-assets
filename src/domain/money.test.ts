@@ -4,6 +4,7 @@ import {
   DRIP_PER_VOTE,
   formatBasisPoints,
   formatCfx,
+  formatTokenAmount,
   isWholeVoteAmount,
   parseCfx,
   toBigInt,
@@ -30,5 +31,11 @@ describe('money', () => {
   it('formats APY basis points without floating point arithmetic', () => {
     expect(formatBasisPoints(1290n)).toBe('12.90%');
     expect(formatBasisPoints(5n)).toBe('0.05%');
+  });
+
+  it('formats arbitrary token precision without floating point arithmetic', () => {
+    expect(formatTokenAmount(123456789n, 6, 4)).toBe('123.4567');
+    expect(formatTokenAmount(42n, 0)).toBe('42');
+    expect(() => formatTokenAmount(1n, -1)).toThrow('精度无效');
   });
 });
