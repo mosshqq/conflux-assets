@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ESPACE_MAINNET } from '../../config/network';
+import { ESPACE_NETWORK } from '../../config/network';
 import { readESpaceBalance } from './espaceClient';
 
 describe('eSpace client', () => {
@@ -16,7 +16,7 @@ describe('eSpace client', () => {
       42n,
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      ESPACE_MAINNET.rpcUrl,
+      ESPACE_NETWORK.rpcUrl,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({

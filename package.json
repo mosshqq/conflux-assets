@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "dev:testnet": "vite --mode core-testnet",
+    "dev:espace-testnet": "vite --mode espace-testnet",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint .",
@@ -22,6 +23,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "6.30.4",
+    "viem": "^2.54.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {

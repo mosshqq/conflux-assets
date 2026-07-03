@@ -74,3 +74,48 @@ export interface PreparedTransaction {
   gasPrice?: string;
   storageLimit?: string;
 }
+
+export type ESpaceAddress = `0x${string}`;
+
+export interface VSwapDiscoveredPosition {
+  tokenId: bigint;
+  owner: ESpaceAddress;
+  poolAddress: ESpaceAddress;
+}
+
+export interface VSwapToken {
+  address: ESpaceAddress;
+  symbol: string;
+  name: string;
+  decimals: number;
+}
+
+export interface VSwapTokenAmount {
+  token: VSwapToken;
+  amount: bigint;
+}
+
+export interface VSwapReward {
+  token: VSwapToken;
+  unsettledAmount: bigint;
+  settledAmount: bigint;
+  totalAmount: bigint;
+}
+
+export type VSwapPositionStatus = 'in-range' | 'out-of-range' | 'closed';
+
+export interface VSwapPosition {
+  discovered: VSwapDiscoveredPosition;
+  feeTier: number;
+  tickLower: number;
+  tickUpper: number;
+  currentTick: number;
+  liquidity: bigint;
+  status: VSwapPositionStatus;
+  token0Amount: VSwapTokenAmount;
+  token1Amount: VSwapTokenAmount;
+  unclaimedFee0: VSwapTokenAmount;
+  unclaimedFee1: VSwapTokenAmount;
+  rewards: VSwapReward[];
+  warnings: string[];
+}

@@ -12,7 +12,7 @@ test('home page exposes address search and saved pool status', async ({ page }) 
   await expect(page.getByText('eSpace 地址必须是 0x 开头的 20 字节十六进制地址')).toBeVisible();
 });
 
-test('eSpace address query shows balance-only scope', async ({ page }) => {
+test('eSpace address query shows native balance and vSwap scope', async ({ page }) => {
   const address = '0x1000000000000000000000000000000000000001';
   await page.goto('/');
 
@@ -22,6 +22,7 @@ test('eSpace address query shows balance-only scope', async ({ page }) => {
   await expect(page).toHaveURL(`/address/${address}`);
   await expect(page.getByRole('heading', { name: '当前为 eSpace 余额查询' })).toBeVisible();
   await expect(page.getByText('eSpace 可用余额')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'vSwap LP Farming' })).toBeVisible();
   await expect(page.getByText('有效质押')).toHaveCount(0);
 });
 

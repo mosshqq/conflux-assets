@@ -9,6 +9,15 @@ export interface CoreNetwork {
   explorerUrl: string;
 }
 
+export interface ESpaceNetwork {
+  id: 'mainnet' | 'testnet';
+  name: string;
+  label: string;
+  chainId: 1030 | 71;
+  rpcUrl: string;
+  explorerUrl: string;
+}
+
 export const CORE_MAINNET: CoreNetwork = {
   id: 'mainnet',
   name: 'Conflux Core Space',
@@ -44,11 +53,29 @@ const viteEnvironment = (
 // Production always resolves to mainnet, even if someone builds with --mode core-testnet.
 export const CORE_NETWORK = resolveCoreNetwork(viteEnvironment.DEV, viteEnvironment.MODE);
 
-export const ESPACE_MAINNET = {
+export const ESPACE_MAINNET: ESpaceNetwork = {
+  id: 'mainnet',
   name: 'Conflux eSpace',
+  label: '主网',
   chainId: 1030,
   rpcUrl: 'https://evm.confluxrpc.com',
   explorerUrl: 'https://evm.confluxscan.org',
-} as const;
+};
+
+export const ESPACE_TESTNET: ESpaceNetwork = {
+  id: 'testnet',
+  name: 'Conflux eSpace',
+  label: '测试网',
+  chainId: 71,
+  rpcUrl: 'https://evmtestnet.confluxrpc.com',
+  explorerUrl: 'https://evmtestnet.confluxscan.org',
+};
+
+export function resolveESpaceNetwork(isDevelopment: boolean, mode: string): ESpaceNetwork {
+  return isDevelopment && mode === 'espace-testnet' ? ESPACE_TESTNET : ESPACE_MAINNET;
+}
+
+// Production always resolves to mainnet, even if someone builds with --mode espace-testnet.
+export const ESPACE_NETWORK = resolveESpaceNetwork(viteEnvironment.DEV, viteEnvironment.MODE);
 
 export const PORTFOLIO_REFRESH_INTERVAL = 60_000;

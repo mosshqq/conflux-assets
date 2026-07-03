@@ -1,4 +1,4 @@
-import { ESPACE_MAINNET } from '../../config/network';
+import { ESPACE_NETWORK } from '../../config/network';
 import { toBigInt } from '../../domain/money';
 
 interface JsonRpcResponse {
@@ -10,7 +10,7 @@ interface JsonRpcResponse {
 }
 
 export async function readESpaceBalance(address: string): Promise<bigint> {
-  const response = await fetch(ESPACE_MAINNET.rpcUrl, {
+  const response = await fetch(ESPACE_NETWORK.rpcUrl, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({

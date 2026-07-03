@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { CORE_NETWORK } from '../config/network';
+import { CORE_NETWORK, ESPACE_NETWORK } from '../config/network';
 import { ThemeToggle } from '../features/theme/ThemeToggle';
 
 export function AppShell() {
@@ -18,6 +18,11 @@ export function AppShell() {
                 {CORE_NETWORK.id === 'testnet' ? (
                   <span className="rounded bg-accent/15 px-1.5 py-0.5 font-medium text-accent">
                     Core 测试网
+                  </span>
+                ) : null}
+                {ESPACE_NETWORK.id === 'testnet' ? (
+                  <span className="rounded bg-accent/15 px-1.5 py-0.5 font-medium text-accent">
+                    eSpace 测试网
                   </span>
                 ) : null}
               </span>
@@ -46,7 +51,8 @@ export function AppShell() {
       </main>
 
       <footer className="border-t border-line px-4 py-6 text-center text-xs text-muted">
-        数据直接来自 Conflux Core Space {CORE_NETWORK.label}与 eSpace 主网。请独立评估 PoS 池风险。
+        数据直接来自 Conflux Core Space {CORE_NETWORK.label}与 eSpace
+        {ESPACE_NETWORK.label}。请独立评估 PoS 池风险。
       </footer>
     </div>
   );

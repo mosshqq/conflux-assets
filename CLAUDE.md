@@ -2,7 +2,8 @@
 
 纯前端 Conflux 资产看板。生产环境使用 Core Space 主网；本地可显式切换 Core Space
 测试网验证写交易。Core 地址支持余额、标准 PoS Pool 持仓、池合约预期 APY 和受门禁
-保护的交易；eSpace 始终只支持主网原生 CFX 余额。
+保护的交易；生产环境 eSpace 主网支持原生 CFX 余额及只读 vSwap LP Farming 仓位，
+本地可显式切换 eSpace 测试网验证读取。
 
 ## 接手入口
 
@@ -13,7 +14,7 @@
 ## 当前状态
 
 - 已完成：Core 查询与聚合、地址/池收藏、池详情、四类受门禁保护的 Core 交易 UI、
-  eSpace 原生余额查询。
+  eSpace 原生余额和 vSwap LP Farming 仓位查询。
 - 地址总览明确展示可用余额、各质押阶段、收益和包含以上分项的 Core 总资产；池读取失败
   时总资产按已读取下限展示。
 - 池详情展示增加质押锁定、可解质押额度、解质押等待和本金可提取的生命周期时间线；
@@ -23,7 +24,7 @@
 - 地址列表保持收藏顺序，以高亮标识当前项，并展示每个地址的总 CFX。
 - 界面通过图标按钮切换 `system/light/dark` 主题，颜色均使用语义变量。
 - Core/eSpace 路由切换使用稳定滚动条槽位，页面宽度不随内容高度变化。
-- 完整验收：58 项单元测试、6 项 Playwright E2E 全部通过。
+- 完整验收以 `docs/TODO.md` 的最新记录为准。
 - 测试网已完成两笔各 1 票的增加质押、回执和状态回读；后续解质押、领取收益和分批
   提取检查点见 `docs/TODO.md`。测试钱包信息未持久化。
 - 排序偏好持久化、Core 总资产与质押生命周期时间线已合入 `main` 并发布到生产站点。
@@ -31,7 +32,7 @@
 ## 技术栈
 
 - React 18、TypeScript、Vite、React Router
-- TanStack Query、js-conflux-sdk、原生 eSpace JSON-RPC、Fluent Provider API
+- TanStack Query、js-conflux-sdk、viem、eSpace JSON-RPC、Fluent Provider API
 - Zod、Tailwind CSS、Lucide React、CSS 语义变量
 - Vitest、Testing Library、Playwright
 
@@ -40,6 +41,7 @@
 ```bash
 pnpm dev
 pnpm dev:testnet
+pnpm dev:espace-testnet
 pnpm typecheck
 pnpm lint
 pnpm format:check
