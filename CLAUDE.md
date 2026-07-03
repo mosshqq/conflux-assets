@@ -2,7 +2,8 @@
 
 纯前端 Conflux 资产看板。生产环境使用 Core Space 主网；本地可显式切换 Core Space
 测试网验证写交易。Core 地址支持余额、标准 PoS Pool 持仓、池合约预期 APY 和受门禁
-保护的交易；eSpace 主网支持原生 CFX 余额及只读 vSwap LP Farming 仓位。
+保护的交易；生产环境 eSpace 主网支持原生 CFX 余额及只读 vSwap LP Farming 仓位，
+本地可显式切换 eSpace 测试网验证读取。
 
 ## 接手入口
 
@@ -40,6 +41,7 @@
 ```bash
 pnpm dev
 pnpm dev:testnet
+pnpm dev:espace-testnet
 pnpm typecheck
 pnpm lint
 pnpm format:check

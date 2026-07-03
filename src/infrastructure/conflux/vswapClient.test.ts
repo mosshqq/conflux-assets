@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { VSWAP_MAINNET } from '../../config/vswap';
+import { VSWAP_NETWORK } from '../../config/vswap';
 import { discoverVSwapPositions } from './vswapClient';
 
 const OWNER = '0x1000000000000000000000000000000000000001';
@@ -44,7 +44,7 @@ describe('vSwap client discovery', () => {
     expect(result[100]?.tokenId).toBe(340282366920938463463374607431768211456n);
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      VSWAP_MAINNET.subgraphUrl,
+      VSWAP_NETWORK.subgraphUrl,
       expect.objectContaining({
         body: expect.stringContaining('"skip":100'),
       }),

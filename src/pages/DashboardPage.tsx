@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAppState } from '../app/useAppState';
 import { MetricCard } from '../components/MetricCard';
-import { CORE_NETWORK } from '../config/network';
+import { CORE_NETWORK, ESPACE_NETWORK } from '../config/network';
 import { normalizeQueryAddress, shortenAddress, type QueryAddressSpace } from '../domain/address';
 import { formatCfx } from '../domain/money';
 import { aggregatePortfolioTotal, aggregatePositions, hasPosition } from '../domain/portfolio';
@@ -118,7 +118,7 @@ export function DashboardPage() {
               <h1 className="text-2xl font-semibold">地址资产明细</h1>
               <span className="rounded-full border border-line bg-surface px-2 py-1 text-xs text-muted">
                 {isESpace
-                  ? 'eSpace Mainnet · 1030'
+                  ? `eSpace ${ESPACE_NETWORK.id === 'testnet' ? 'Testnet' : 'Mainnet'} · ${ESPACE_NETWORK.chainId}`
                   : `Core Space ${CORE_NETWORK.id === 'testnet' ? 'Testnet' : 'Mainnet'} · ${CORE_NETWORK.networkId}`}
               </span>
             </div>
@@ -167,8 +167,8 @@ export function DashboardPage() {
             <section className="rounded-2xl border border-accent/25 bg-accent/[0.07] p-6">
               <h2 className="font-semibold text-accent">当前为 eSpace 余额查询</h2>
               <p className="mt-2 text-sm leading-6 text-muted">
-                当前查询 eSpace 主网原生 CFX 余额及 vSwap LP Farming 仓位。多种代币资产不折算进总
-                CFX，暂不支持钱包连接或交易。
+                当前查询 eSpace {ESPACE_NETWORK.label}原生 CFX 余额及 vSwap LP Farming
+                仓位。多种代币资产不折算进总 CFX，暂不支持钱包连接或交易。
               </p>
             </section>
 

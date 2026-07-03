@@ -6,9 +6,11 @@
 
 - 当前开发分支为 `codex/vswap-espace-staking`；vSwap LP Farming 只读仓位展示待通过
   正式 PR 合入 `main`，不得直接在 `main` 开发或提交。
-- 本轮本地验收已通过：68 项单测、6 项 E2E、类型、Lint、格式和生产构建。
+- 本轮本地验收已通过：70 项单测、6 项 E2E、类型、Lint、格式和生产构建。
 - 已使用 eSpace 主网真实仓位验证两组 V3 NFT 的 token 数量、手续费与区间状态；桌面和
   375px 视口无横向溢出，浏览器控制台无错误。
+- 已使用用户临时提供的 eSpace 测试网地址验证 6 个 managed positions，其中 3 个有效且
+  均在价格区间内；地址和真实资产数量不写入仓库。
 - `deploy-pages.yml` 已成功完成；生产页面已核验首页排序、APY、池总质押、地址总资产
   与生命周期读取。
 
@@ -26,6 +28,7 @@
 - [x] 增加质押锁定只展示目标区块尚未到达的 `inQueue` 节点。
 - [x] eSpace 主网原生 CFX 余额查询与范围说明。
 - [x] eSpace 主网 vSwap LP Farming 仓位、token 数量、手续费和奖励只读展示。
+- [x] eSpace 测试网本地模式、网络标签、独立 Query key 与 vSwap 测试网配置。
 - [x] 地址列表保持收藏顺序，未收藏当前地址追加到末尾。
 - [x] 地址列表仅高亮当前项，并显示 Core/eSpace 规则对应的总 CFX。
 - [x] Lucide 图标切换跟随系统、明亮、暗黑主题及偏好持久化。

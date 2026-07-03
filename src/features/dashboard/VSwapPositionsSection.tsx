@@ -1,5 +1,5 @@
-import { ESPACE_MAINNET } from '../../config/network';
-import { VSWAP_MAINNET } from '../../config/vswap';
+import { ESPACE_NETWORK } from '../../config/network';
+import { VSWAP_NETWORK } from '../../config/vswap';
 import { formatTokenAmount } from '../../domain/money';
 import type { VSwapPosition, VSwapTokenAmount } from '../../domain/types';
 import { aggregateVSwapAmounts } from '../../domain/vswap';
@@ -122,7 +122,7 @@ function PositionCard({ position, onRetry }: { position: VSwapPosition; onRetry:
 
       <div className="mt-4 flex flex-wrap gap-3 text-xs">
         <a
-          href={`${ESPACE_MAINNET.explorerUrl}/address/${position.discovered.poolAddress}`}
+          href={`${ESPACE_NETWORK.explorerUrl}/address/${position.discovered.poolAddress}`}
           target="_blank"
           rel="noreferrer"
           className="text-accent hover:underline"
@@ -130,7 +130,7 @@ function PositionCard({ position, onRetry }: { position: VSwapPosition; onRetry:
           查看池合约
         </a>
         <a
-          href={`${ESPACE_MAINNET.explorerUrl}/address/${VSWAP_MAINNET.positionManager}`}
+          href={`${ESPACE_NETWORK.explorerUrl}/address/${VSWAP_NETWORK.positionManager}`}
           target="_blank"
           rel="noreferrer"
           className="text-accent hover:underline"

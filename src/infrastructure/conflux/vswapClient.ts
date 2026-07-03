@@ -1,11 +1,11 @@
 import { createPublicClient, defineChain, http, type Address } from 'viem';
-import { ESPACE_MAINNET } from '../../config/network';
+import { ESPACE_NETWORK } from '../../config/network';
 import {
   AUTO_POSITION_MANAGER_ABI,
   ERC20_METADATA_ABI,
   POSITION_MANAGER_ABI,
   V3_POOL_ABI,
-  VSWAP_MAINNET,
+  VSWAP_NETWORK,
   VSWAP_STAKER_ABI,
   type VSwapIncentiveKey,
 } from '../../config/vswap';
@@ -19,16 +19,16 @@ import type {
 import { calculatePositionAmounts, resolveVSwapPositionStatus } from '../../domain/vswap';
 
 const espaceChain = defineChain({
-  id: ESPACE_MAINNET.chainId,
-  name: ESPACE_MAINNET.name,
+  id: ESPACE_NETWORK.chainId,
+  name: ESPACE_NETWORK.name,
   nativeCurrency: { name: 'CFX', symbol: 'CFX', decimals: 18 },
-  rpcUrls: { default: { http: [ESPACE_MAINNET.rpcUrl] } },
-  blockExplorers: { default: { name: 'ConfluxScan', url: ESPACE_MAINNET.explorerUrl } },
+  rpcUrls: { default: { http: [ESPACE_NETWORK.rpcUrl] } },
+  blockExplorers: { default: { name: 'ConfluxScan', url: ESPACE_NETWORK.explorerUrl } },
 });
 
 const publicClient = createPublicClient({
   chain: espaceChain,
-  transport: http(ESPACE_MAINNET.rpcUrl),
+  transport: http(ESPACE_NETWORK.rpcUrl),
 });
 
 const MAX_UINT128 = (1n << 128n) - 1n;
@@ -59,7 +59,7 @@ export async function discoverVSwapPositions(
   const positions: VSwapDiscoveredPosition[] = [];
 
   while (positions.length < MAX_DISCOVERED_POSITIONS) {
-    const response = await fetch(VSWAP_MAINNET.subgraphUrl, {
+    const response = await fetch(VSWAP_NETWORK.subgraphUrl, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -157,7 +157,7 @@ async function readRewards(
   let keys: readonly VSwapIncentiveKey[];
   try {
     const result = await publicClient.readContract({
-      address: VSWAP_MAINNET.staker,
+      address: VSWAP_NETWORK.staker,
       abi: VSWAP_STAKER_ABI,
       functionName: 'getAllIncentiveKeysByPool',
       args: [discovered.poolAddress],
@@ -173,13 +173,13 @@ async function readRewards(
       try {
         const [stakeInfo, settledAmount] = await Promise.all([
           publicClient.readContract({
-            address: VSWAP_MAINNET.staker,
+            address: VSWAP_NETWORK.staker,
             abi: VSWAP_STAKER_ABI,
             functionName: 'getStakeRewardInfo',
             args: [key, discovered.tokenId],
           }),
           publicClient.readContract({
-            address: VSWAP_MAINNET.staker,
+            address: VSWAP_NETWORK.staker,
             abi: VSWAP_STAKER_ABI,
             functionName: 'rewards',
             args: [discovered.tokenId, key.rewardToken],
@@ -239,7 +239,7 @@ export async function readVSwapPosition(
 ): Promise<VSwapPosition> {
   const warnings: string[] = [];
   const position = await publicClient.readContract({
-    address: VSWAP_MAINNET.positionManager,
+    address: VSWAP_NETWORK.positionManager,
     abi: POSITION_MANAGER_ABI,
     functionName: 'positions',
     args: [discovered.tokenId],
@@ -272,7 +272,7 @@ export async function readVSwapPosition(
   try {
     const simulation = await publicClient.simulateContract({
       account: discovered.owner,
-      address: VSWAP_MAINNET.autoPositionManager,
+      address: VSWAP_NETWORK.autoPositionManager,
       abi: AUTO_POSITION_MANAGER_ABI,
       functionName: 'collect',
       args: [

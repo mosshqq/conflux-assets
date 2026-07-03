@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "dev:testnet": "vite --mode core-testnet",
+    "dev:espace-testnet": "vite --mode espace-testnet",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint .",

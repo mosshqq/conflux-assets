@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { CORE_MAINNET, CORE_TESTNET, resolveCoreNetwork } from './network';
+import {
+  CORE_MAINNET,
+  CORE_TESTNET,
+  ESPACE_MAINNET,
+  ESPACE_TESTNET,
+  resolveCoreNetwork,
+  resolveESpaceNetwork,
+} from './network';
 
 describe('Core network selection', () => {
   it('uses testnet only in the explicit local development mode', () => {
@@ -9,5 +16,17 @@ describe('Core network selection', () => {
 
   it('forces mainnet for production builds regardless of mode', () => {
     expect(resolveCoreNetwork(false, 'core-testnet')).toBe(CORE_MAINNET);
+  });
+});
+
+describe('eSpace network selection', () => {
+  it('uses testnet only in the explicit local development mode', () => {
+    expect(resolveESpaceNetwork(true, 'espace-testnet')).toBe(ESPACE_TESTNET);
+    expect(resolveESpaceNetwork(true, 'development')).toBe(ESPACE_MAINNET);
+    expect(resolveESpaceNetwork(true, 'core-testnet')).toBe(ESPACE_MAINNET);
+  });
+
+  it('forces mainnet for production builds regardless of mode', () => {
+    expect(resolveESpaceNetwork(false, 'espace-testnet')).toBe(ESPACE_MAINNET);
   });
 });

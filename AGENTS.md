@@ -10,7 +10,8 @@
 ## 不变量
 
 - 生产构建的 Core Space 只支持主网 network ID 1029；本地 `pnpm dev:testnet` 使用测试网
-  network ID 1。eSpace 始终只支持主网 chain ID 1030。
+  network ID 1。生产构建的 eSpace 只支持主网 chain ID 1030；本地
+  `pnpm dev:espace-testnet` 使用测试网 chain ID 71。
 - eSpace 只读原生 CFX 余额和 vSwap 管理的 V3 NFT 仓位，不连接钱包、不发送交易；
   vSwap 多 token 资产不得折算进地址列表总 CFX。
 - 链上金额、Drip、票数和收益只能用 `bigint` 或十进制字符串，禁止浮点数。

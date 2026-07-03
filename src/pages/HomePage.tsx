@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../app/useAppState';
-import { CORE_NETWORK } from '../config/network';
+import { CORE_NETWORK, ESPACE_NETWORK } from '../config/network';
 import { normalizeQueryAddress, shortenAddress } from '../domain/address';
 import { PoolManager } from '../features/pools/PoolManager';
 
@@ -32,8 +32,8 @@ export function HomePage() {
           一个地址，查看 Conflux 资产
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-muted sm:text-base">
-          Core Space {CORE_NETWORK.label}地址可查询余额、PoS 持仓与收益；eSpace
-          地址暂时只查询主网原生 CFX 余额。只有 Core 地址主动连接 Fluent
+          Core Space {CORE_NETWORK.label}地址可查询余额、PoS 持仓与收益；eSpace 地址可查询
+          {ESPACE_NETWORK.label}原生 CFX 余额及 vSwap LP Farming 仓位。只有 Core 地址主动连接 Fluent
           且账户匹配时，才会开放交易。
         </p>
 
@@ -51,8 +51,9 @@ export function HomePage() {
         </form>
         {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
         <p className="mt-3 text-xs leading-5 text-muted">
-          支持 Core Space {CORE_NETWORK.label}（network ID {CORE_NETWORK.networkId}）与 eSpace
-          主网（chain ID 1030）；eSpace 暂不支持代币、PoS 持仓或交易。
+          支持 Core Space {CORE_NETWORK.label}（network ID {CORE_NETWORK.networkId}）与 eSpace{' '}
+          {ESPACE_NETWORK.label}（chain ID {ESPACE_NETWORK.chainId}）；eSpace
+          暂不支持钱包连接或交易。
         </p>
       </section>
 

@@ -111,9 +111,12 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
 - Core 生产环境：network ID 1029，`https://main.confluxrpc.com`。
 - Core 本地测试网模式：network ID 1，`https://test.confluxrpc.com`；仅
   `pnpm dev:testnet` 生效，生产构建即使使用同名 Vite mode 也强制回退主网。
-- eSpace：chain ID 1030，`https://evm.confluxrpc.com`。
-- vSwap：固定读取 eSpace 主网 Position Manager、Auto Position Manager、V3 Staker
-  及其只读 subgraph；不连接钱包、不发送交易。
+- eSpace 生产环境：chain ID 1030，`https://evm.confluxrpc.com`。
+- eSpace 本地测试网模式：chain ID 71，`https://evmtestnet.confluxrpc.com`；仅
+  `pnpm dev:espace-testnet` 生效，生产构建即使使用同名 Vite mode 也强制回退主网。
+- vSwap 合约地址、浏览器和只读 staker subgraph 跟随当前 eSpace 网络；不连接钱包、
+  不发送交易。
+- eSpace 原生余额和 vSwap Query key 包含 chain ID，避免主网与测试网缓存混用。
 - 链上金额全部使用 `bigint`；展示层只格式化字符串。
 - `poolAPY()` 原始整数按基点保存在 `PoolPosition.expectedApyBps`；读取失败使用 `null`
   降级，禁止前端根据累计收益或浮点数自行推算。

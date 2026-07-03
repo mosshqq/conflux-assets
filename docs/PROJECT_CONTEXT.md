@@ -6,7 +6,8 @@
 
 - Core Space：生产环境查询主网；本地测试网模式查询测试网。支持 CFX 余额、标准 PoS
   Pool 持仓、解质押进度和收益。
-- eSpace：只读原生 CFX 余额和 vSwap LP Farming 仓位，不连接钱包或发送交易。
+- eSpace：生产环境读取主网，本地可显式切换测试网；只读原生 CFX 余额和 vSwap LP
+  Farming 仓位，不连接钱包或发送交易。
 - Core 写操作仅在用户主动连接 Fluent 且全部安全门禁满足时开放。
 
 项目是纯前端 SPA，不托管密钥，不提供投资建议。
@@ -63,6 +64,8 @@
   NFT 仓位。
 - 不接入旧 vSwap VST/veVST 锁仓；仓库中的旧主网 VotingEscrow 地址链上已无合约代码。
 - vSwap 独立仓位详情页、完整价格区间、当前价格和预计每日奖励留待后续任务。
+- eSpace 测试网仅由本地 `pnpm dev:espace-testnet` 启用，生产构建即使使用同名 mode
+  也必须回退主网。
 - 不支持 Nucleon、PHX V2 等非标准协议。
 - 无后端、登录、数据库、云同步、个性化收益预测或自动交易；池 APY 仅展示合约按近
   7 天收益计算的年化估算。

@@ -1,4 +1,5 @@
 import type { ESpaceAddress } from '../domain/types';
+import { ESPACE_NETWORK } from './network';
 
 export const VSWAP_MAINNET = {
   subgraphUrl: 'https://mainnet.congraph.io/subgraphs/name/omniaxon/staker',
@@ -6,6 +7,15 @@ export const VSWAP_MAINNET = {
   autoPositionManager: '0x5414b6AE40Fb093875284e09D517190096647b10',
   staker: '0x326b6ec27A250926f66AFfc958cFbA35072C886f',
 } as const satisfies Record<string, string>;
+
+export const VSWAP_TESTNET = {
+  subgraphUrl: 'https://testnet.congraph.io/subgraphs/name/omniaxon/staker',
+  positionManager: '0xdba7475F00deb72Bc80B16e8d742c86760c342fe',
+  autoPositionManager: '0x5221b4bcbc82e64d997841a2CDf540dF48A717d8',
+  staker: '0x65B5a88FCD4FAb5fF9615cFB3Ae11eF24594db80',
+} as const satisfies Record<string, string>;
+
+export const VSWAP_NETWORK = ESPACE_NETWORK.id === 'testnet' ? VSWAP_TESTNET : VSWAP_MAINNET;
 
 export const POSITION_MANAGER_ABI = [
   {
