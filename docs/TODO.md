@@ -6,7 +6,7 @@
 
 - 当前开发分支为 `codex/vswap-espace-staking`；vSwap LP Farming 只读仓位展示待通过
   正式 PR 合入 `main`，不得直接在 `main` 开发或提交。
-- 本轮本地验收已通过：70 项单测、6 项 E2E、类型、Lint、格式和生产构建。
+- 本轮本地验收已通过：71 项单测、6 项 E2E、类型、Lint、格式和生产构建。
 - 已使用 eSpace 主网真实仓位验证两组 V3 NFT 的 token 数量、手续费与区间状态；桌面和
   375px 视口无横向溢出，浏览器控制台无错误。
 - 已使用用户临时提供的 eSpace 测试网地址验证 6 个 managed positions，其中 3 个有效且

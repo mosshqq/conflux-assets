@@ -91,4 +91,33 @@ describe('VSwapPositionsSection', () => {
     expect(screen.getByText('vSwap NFT #8')).toBeVisible();
     expect(screen.getByRole('button', { name: '重试该仓位' })).toBeVisible();
   });
+
+  it('marks aggregates as lower bounds when optional position data has warnings', () => {
+    render(
+      <VSwapPositionsSection
+        discoveryQuery={
+          {
+            data: [discovered[0]],
+            isPending: false,
+            isError: false,
+            refetch: vi.fn(),
+          } as never
+        }
+        positionQueries={
+          [
+            {
+              data: { ...position, warnings: ['farming 奖励计划读取失败'] },
+              isPending: false,
+              isError: false,
+              refetch: vi.fn(),
+            },
+          ] as never
+        }
+      />,
+    );
+
+    expect(screen.getByText('≥ 1.25 TK0')).toBeVisible();
+    expect(screen.getByText('≥ 0.05 TK0')).toBeVisible();
+    expect(screen.getByText(/1 个仓位的手续费或奖励读取不完整/)).toBeVisible();
+  });
 });

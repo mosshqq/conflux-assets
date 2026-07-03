@@ -176,7 +176,10 @@ export function VSwapPositionsSection({ discoveryQuery, positionQueries }: VSwap
     .filter((position): position is VSwapPosition => Boolean(position));
   const failedCount = positionQueries.filter((query) => query.isError && !query.data).length;
   const pendingCount = positionQueries.filter((query) => query.isPending && !query.data).length;
-  const lowerBound = failedCount > 0;
+  const warningPositionCount = successfulPositions.filter(
+    (position) => position.warnings.length > 0,
+  ).length;
+  const lowerBound = failedCount > 0 || warningPositionCount > 0;
   const positionAmounts = aggregateVSwapAmounts(successfulPositions, (position) => [
     position.token0Amount,
     position.token1Amount,
@@ -243,11 +246,16 @@ export function VSwapPositionsSection({ discoveryQuery, positionQueries }: VSwap
             </div>
           )}
 
-          {failedCount > 0 ? (
+          {lowerBound ? (
             <div className="rounded-2xl border border-warning-border bg-warning-surface p-5">
               <p className="font-semibold text-warning">仓位汇总不完整</p>
               <p className="mt-2 text-sm text-warning-muted">
-                {failedCount} 个仓位读取失败，当前 token 汇总仅为成功读取部分的下限。
+                {failedCount > 0 ? `${failedCount} 个仓位读取失败` : ''}
+                {failedCount > 0 && warningPositionCount > 0 ? '，' : ''}
+                {warningPositionCount > 0
+                  ? `${warningPositionCount} 个仓位的手续费或奖励读取不完整`
+                  : ''}
+                ，当前 token 汇总仅为成功读取部分的下限。
               </p>
             </div>
           ) : null}
