@@ -13,21 +13,13 @@
 
 ## 当前状态
 
-- 已完成：Core 查询与聚合、地址/池收藏、池详情、四类受门禁保护的 Core 交易 UI、
-  eSpace 原生余额和 vSwap LP Farming 仓位查询。
-- 地址总览明确展示可用余额、各质押阶段、收益和包含以上分项的 Core 总资产；池读取失败
-  时总资产按已读取下限展示。
-- 池详情展示增加质押锁定、可解质押额度、解质押等待和本金可提取的生命周期时间线；
-  已达到目标区块但仍残留在 `inQueue` 的节点不作为“锁定中”展示。
-- 首页池列表展示预期 APY 与池总质押，支持按 APY、总质押和收藏顺序排序；地址资产明细
-  支持按 APY、有效质押和未领取收益排序；两处排序偏好会按 Core 网络缓存。
-- 地址列表保持收藏顺序，以高亮标识当前项，并展示每个地址的总 CFX。
-- 界面通过图标按钮切换 `system/light/dark` 主题，颜色均使用语义变量。
-- Core/eSpace 路由切换使用稳定滚动条槽位，页面宽度不随内容高度变化。
-- 完整验收以 `docs/TODO.md` 的最新记录为准。
-- 测试网已完成两笔各 1 票的增加质押、回执和状态回读；后续解质押、领取收益和分批
-  提取检查点见 `docs/TODO.md`。测试钱包信息未持久化。
-- 排序偏好持久化、Core 总资产与质押生命周期时间线已合入 `main` 并发布到生产站点。
+- Core：余额、标准 PoS 多池持仓/生命周期/APY/排序、地址与池收藏、总资产聚合，以及
+  增加质押、解质押、领取收益、提取本金四类受门禁保护的交易 UI。
+- eSpace：原生 CFX 余额和 vSwap managed V3 NFT 仓位，展示 token 数量、区间状态、
+  未领取手续费与 farming 奖励；全部只读。
+- 通用：地址快捷切换与总 CFX、语义颜色主题、稳定滚动条槽位、GitHub Pages 部署。
+- vSwap 与 eSpace 测试网改动位于 PR #1，尚未合入 `main`；发布和后续任务以
+  `docs/TODO.md` 为准。
 
 ## 技术栈
 
@@ -50,6 +42,5 @@ pnpm build
 pnpm test:e2e
 ```
 
-生产站点：`https://mosshqq.github.io/conflux-assets/`；`main` 更新会触发 GitHub Pages。
-发布后用 `gh run list --workflow deploy-pages.yml --limit 1` 获取运行，再用
-`gh run watch <run-id>` 核验。
+生产站点：`https://mosshqq.github.io/conflux-assets/`。`main` 更新触发 GitHub Pages；
+发布后检查 `deploy-pages.yml` 并核验生产页面。

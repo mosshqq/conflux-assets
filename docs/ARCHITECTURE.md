@@ -58,7 +58,7 @@ e2e/
   Staker。单仓位失败不能中断原生余额或其他仓位。
 - 仓位 token 数量使用 Uniswap V3 TickMath/Q96 bigint 公式计算；手续费通过只读模拟
   `AutoPositionManager.collect` 获取，farming 奖励按 reward token 合并。多 token 汇总
-  不折算成美元或 CFX，失败仓位导致汇总以已读取下限展示。
+  不折算成美元或 CFX；整仓位失败或可选字段 warning 都使汇总以已读取下限展示。
 - 两类 Query 互斥启用，切换路由不能触发错误网络的请求。
 
 ### 地址列表
@@ -129,7 +129,8 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
 - 准备交易后按 `value + gas * gasPrice + storageLimit * 10^18 / 1024` 校验余额，全部
   使用 `bigint`。
 - 单元测试覆盖网络选择、池查询/排序、`inQueue` 解质押门禁和动态交易成本；Playwright
-  覆盖读取范围、池排序控件、主题、地址切换与布局。真实钱包写流程另按
+  覆盖读取范围、池排序控件、主题、地址切换与布局。vSwap 单元测试覆盖 TickMath、
+  subgraph 分页、逐仓位失败隔离、token 聚合和 warning-only 下限。真实钱包写流程另按
   `docs/TODO.md` 验证。
 
 ## 构建与部署

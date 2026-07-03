@@ -12,12 +12,20 @@
 
 项目是纯前端 SPA，不托管密钥，不提供投资建议。
 
+## 技术栈
+
+- React 18、TypeScript、Vite、React Router、Tailwind CSS。
+- TanStack Query 管理链上缓存；Core 使用 `js-conflux-sdk`，eSpace/vSwap 使用 viem。
+- Zod 做持久化校验；Vitest、Testing Library、Playwright 负责验收。
+
 ## 已完成模块
 
 - 地址：按当前 Core 网络校验并规范化 `cfx:` 或 `cfxtest:` 用户/合约地址，以及 `0x`
   eSpace 地址。
 - 查询：Core 余额、多池并发与失败隔离；eSpace `eth_getBalance` 独立查询，并通过
   vSwap staker subgraph 发现地址仓位、通过 eSpace 合约读取仓位资产、手续费和奖励。
+- vSwap：分页发现 managed NFT；逐仓位读取 Position Manager、池状态、token 元数据、
+  未领取手续费与 farming 奖励；支持单仓位重试和部分结果下限。
 - 聚合：有效质押、解质押中、可提取本金、未领取收益，以及可用余额加池内本金和收益的
   Core 总资产；存在未读取池时按下限展示。
 - 池 APY：读取标准池 `poolAPY()`，按近 7 天收益年化口径在池卡片和详情页展示。
@@ -47,8 +55,8 @@
 - 签名前按准备后的交易字段动态校验余额能够覆盖 value、gas 和 Core Space 存储抵押。
 - 地址列表总 CFX：Core 为可用余额加所有已收藏池中成功读取的未领取收益；eSpace
   为原生 CFX 可用余额。
-- vSwap 仓位资产按 token 地址分别聚合，不进行美元或 CFX 折算；单仓位失败时汇总以
-  `≥` 标识成功读取部分的下限。
+- vSwap 仓位资产按 token 地址分别聚合，不进行美元或 CFX 折算；整仓位失败或可选
+  手续费/奖励读取 warning 都使汇总以 `≥` 标识下限。
 - 地址总览 Core 总资产：可用余额加成功读取池的有效质押、解质押中、可提取本金和
   未领取收益；未完成的池查询不展示总值，池读取失败时以 `≥` 标识已读取资产下限。
 - `poolAPY()` 返回基点整数，例如 `756` 展示为 `7.56%`；旧池不支持时 APY 为不可用，
@@ -74,11 +82,6 @@
 ## 发布与验证状态
 
 - `main` 通过 GitHub Pages 自动部署到 `https://mosshqq.github.io/conflux-assets/`。
-- 排序偏好持久化、Core 总资产与质押生命周期时间线已合入 `main`，并通过 GitHub Pages
-  发布到生产站点。
-- 最新本地验收数量和结果见 `docs/TODO.md`。
-- 浏览器已使用真实标准池数据验证首页 APY/总质押、地址总资产和生命周期读取，并在
-  桌面和 375px 视口检查布局，无横向溢出。
-- 自动化读取流程以及测试网两笔增加质押、回执、状态回读已验证。SDK 直发已验证链上
-  构造，但 Fluent 确认、Query 刷新、解质押、领取收益和分批提取仍需按
-  `docs/TODO.md` 完成。
+- vSwap/eSpace 测试网功能在正式 PR #1，尚未合并或部署；完整验收和真实主/测试网读取
+  已通过。
+- Core 测试网已验证增加质押、回执和状态回读；剩余真实钱包闭环见 `docs/TODO.md`。
