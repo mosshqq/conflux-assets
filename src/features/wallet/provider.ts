@@ -7,6 +7,10 @@ export interface FluentProvider {
   request(args: { method: 'cfx_requestAccounts' }): Promise<string[]>;
   request(args: { method: 'cfx_chainId' }): Promise<string>;
   request(args: {
+    method: 'wallet_switchConfluxChain';
+    params: [{ chainId: string }];
+  }): Promise<null>;
+  request(args: {
     method: 'cfx_sendTransaction';
     params: [PreparedTransaction & { from: string }];
   }): Promise<string>;

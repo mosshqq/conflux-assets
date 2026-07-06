@@ -49,6 +49,52 @@ describe('Core wallet gate', () => {
     expect(result.current.isExpectedNetwork).toBe(false);
   });
 
+  it('asks Fluent to switch a connected wallet to the configured Core network', async () => {
+    let chainId = '0x1';
+    request.mockImplementation(({ method }: { method: string }) => {
+      if (method === 'cfx_accounts') return Promise.resolve([USER]);
+      if (method === 'cfx_chainId') return Promise.resolve(chainId);
+      if (method === 'wallet_switchConfluxChain') {
+        chainId = '0x405';
+        return Promise.resolve(null);
+      }
+      return Promise.resolve([]);
+    });
+    const { result } = renderHook(() => useCoreWallet(USER));
+    await waitFor(() => expect(result.current.status).toBe('active'));
+
+    await act(async () => {
+      await result.current.switchNetwork();
+    });
+
+    expect(request).toHaveBeenCalledWith({
+      method: 'wallet_switchConfluxChain',
+      params: [{ chainId: '0x405' }],
+    });
+    expect(result.current.isExpectedNetwork).toBe(true);
+    expect(result.current.canTransact).toBe(true);
+  });
+
+  it('asks Fluent to switch to Core testnet in local testnet mode', async () => {
+    request.mockImplementation(({ method }: { method: string }) => {
+      if (method === 'cfx_accounts') return Promise.resolve([TESTNET_USER]);
+      if (method === 'cfx_chainId') return Promise.resolve('0x405');
+      if (method === 'wallet_switchConfluxChain') return Promise.resolve(null);
+      return Promise.resolve([]);
+    });
+    const { result } = renderHook(() => useCoreWallet(TESTNET_USER, CORE_TESTNET));
+    await waitFor(() => expect(result.current.status).toBe('active'));
+
+    await act(async () => {
+      await result.current.switchNetwork();
+    });
+
+    expect(request).toHaveBeenCalledWith({
+      method: 'wallet_switchConfluxChain',
+      params: [{ chainId: '0x1' }],
+    });
+  });
+
   it('enables testnet transactions when the local testnet configuration is active', async () => {
     request.mockImplementation(({ method }: { method: string }) => {
       if (method === 'cfx_accounts') return Promise.resolve([TESTNET_USER]);

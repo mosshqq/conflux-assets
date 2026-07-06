@@ -12,6 +12,7 @@ export function useCoreWallet(viewedAddress?: string, network: CoreNetwork = COR
   );
   const [account, setAccount] = useState<string>();
   const [chainId, setChainId] = useState<string>();
+  const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false);
 
   const hydrate = useCallback(async () => {
     const provider = getFluentProvider();
@@ -75,6 +76,26 @@ export function useCoreWallet(viewedAddress?: string, network: CoreNetwork = COR
     }
   }, []);
 
+  const switchNetwork = useCallback(async () => {
+    const provider = getFluentProvider();
+    if (!provider) {
+      setStatus('not-installed');
+      return;
+    }
+
+    setIsSwitchingNetwork(true);
+    try {
+      await provider.request({
+        method: 'wallet_switchConfluxChain',
+        params: [{ chainId: `0x${network.chainId.toString(16)}` }],
+      });
+      const nextChainId = await provider.request({ method: 'cfx_chainId' });
+      setChainId(nextChainId);
+    } finally {
+      setIsSwitchingNetwork(false);
+    }
+  }, [network.chainId]);
+
   const sendTransaction = useCallback(
     async (transaction: PreparedTransaction) => {
       const provider = getFluentProvider();
@@ -98,7 +119,9 @@ export function useCoreWallet(viewedAddress?: string, network: CoreNetwork = COR
     isExpectedNetwork,
     isMatchingAccount,
     canTransact: status === 'active' && isExpectedNetwork && isMatchingAccount,
+    isSwitchingNetwork,
     connect,
+    switchNetwork,
     sendTransaction,
   };
 }
