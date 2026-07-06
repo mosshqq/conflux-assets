@@ -84,7 +84,8 @@ e2e/
 
 ```text
 表单校验
-  -> Fluent/当前 Core network ID/账户匹配/池校验门禁
+  -> 整票输入（质押 MAX 预留 1 CFX；解质押 MAX 扣除治理锁定）
+  -> Fluent/当前 Core network ID（不匹配时请求 wallet_switchConfluxChain）/账户/池门禁
   -> gas 与 storage 估算
   -> value + gas + storage 最大占用余额校验
   -> 用户确认与签名
@@ -123,15 +124,17 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
 - 标准池必须由用户输入并在保存前通过 ABI 读取校验。
 - 钱包直接使用 Fluent 注入 Provider，避免未安装扩展时产生未处理异常。
 - 写交易必须满足 Fluent 已连接、钱包 network ID 等于当前 Core 配置、账户匹配、池已
-  校验。
+  校验；切网只由 `useCoreWallet` 封装 `wallet_switchConfluxChain`，页面不得访问 provider。
+- 质押 MAX 按 `(balance - 1 CFX) / 1000 CFX` 向下取整为票数，解质押 MAX 复用
+  `maxUnstakeVotes`；MAX 只是表单填充，不能替代准备交易后的动态费用校验。
 - 可解质押票数使用 `userSummary.locked` 扣除治理锁定票数；`available` 包含
   `inQueue`，不能作为可解质押额度。
 - 准备交易后按 `value + gas * gasPrice + storageLimit * 10^18 / 1024` 校验余额，全部
   使用 `bigint`。
-- 单元测试覆盖网络选择、池查询/排序、`inQueue` 解质押门禁和动态交易成本；Playwright
-  覆盖读取范围、池排序控件、主题、地址切换与布局。vSwap 单元测试覆盖 TickMath、
-  subgraph 分页、逐仓位失败隔离、token 聚合和 warning-only 下限。真实钱包写流程另按
-  `docs/TODO.md` 验证。
+- 单元测试覆盖网络选择/切换、钱包表单 MAX、生命周期折叠、池查询/排序、`inQueue`
+  解质押门禁和动态交易成本；Playwright 覆盖读取范围、池排序控件、主题、地址切换与
+  布局。vSwap 单元测试覆盖 TickMath、subgraph 分页、逐仓位失败隔离、token 聚合和
+  warning-only 下限。真实钱包写流程另按 `docs/TODO.md` 验证。
 
 ## 构建与部署
 

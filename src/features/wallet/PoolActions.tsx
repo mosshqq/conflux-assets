@@ -1,7 +1,14 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CORE_NETWORK } from '../../config/network';
-import { formatCfx, parseCfx, votesToDrip } from '../../domain/money';
+import {
+  DRIP_PER_CFX,
+  DRIP_PER_VOTE,
+  formatCfx,
+  GAS_RESERVE_DRIP,
+  parseCfx,
+  votesToDrip,
+} from '../../domain/money';
 import { maxUnstakeVotes } from '../../domain/portfolio';
 import {
   validateStakeAmount,
@@ -51,6 +58,18 @@ export function PoolActions({
   const [transactionHash, setTransactionHash] = useState('');
   const [receiptState, setReceiptState] = useState<'idle' | 'waiting' | 'success'>('idle');
   const unstakeableVotes = useMemo(() => maxUnstakeVotes(position), [position]);
+  const maxStakeDrip =
+    walletBalanceDrip > GAS_RESERVE_DRIP
+      ? ((walletBalanceDrip - GAS_RESERVE_DRIP) / DRIP_PER_VOTE) * DRIP_PER_VOTE
+      : 0n;
+
+  function fillStakeMax() {
+    setStakeAmount((maxStakeDrip / DRIP_PER_CFX).toString());
+  }
+
+  function fillUnstakeMax() {
+    setUnstakeAmount((votesToDrip(unstakeableVotes) / DRIP_PER_CFX).toString());
+  }
 
   function requireWallet() {
     if (wallet.status === 'not-installed') throw new Error('请先安装 Fluent 钱包');
@@ -108,6 +127,24 @@ export function PoolActions({
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : '操作校验失败');
+    }
+  }
+
+  async function connectWallet() {
+    setError('');
+    try {
+      await wallet.connect();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '连接 Fluent 失败');
+    }
+  }
+
+  async function switchWalletNetwork() {
+    setError('');
+    try {
+      await wallet.switchNetwork();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '切换钱包网络失败');
     }
   }
 
@@ -174,14 +211,23 @@ export function PoolActions({
           >
             安装 Fluent
           </a>
+        ) : wallet.status === 'active' && !wallet.isExpectedNetwork ? (
+          <button
+            type="button"
+            onClick={() => void switchWalletNetwork()}
+            className="primary-button"
+            disabled={wallet.isSwitchingNetwork}
+          >
+            {wallet.isSwitchingNetwork ? '切换中…' : '切换网络'}
+          </button>
         ) : !wallet.canTransact ? (
           <button
             type="button"
-            onClick={() => void wallet.connect()}
+            onClick={() => void connectWallet()}
             className="primary-button"
             disabled={wallet.status === 'in-activating'}
           >
-            连接 Fluent
+            {wallet.status === 'in-activating' ? '连接中…' : '连接 Fluent'}
           </button>
         ) : null}
       </div>
@@ -192,8 +238,15 @@ export function PoolActions({
           <p className="mt-1 text-xs text-muted">
             1000 CFX 为一票；签名前按 gas 与存储抵押估算校验余额。
           </p>
+          <p className="mt-2 text-xs text-muted">
+            当前余额{' '}
+            <span className="font-medium text-foreground">
+              {formatCfx(walletBalanceDrip, 6)} CFX
+            </span>
+          </p>
           <div className="mt-4 flex">
             <input
+              aria-label="质押 CFX 数量"
               value={stakeAmount}
               onChange={(event) => setStakeAmount(event.target.value)}
               placeholder="CFX 数量"
@@ -201,6 +254,15 @@ export function PoolActions({
               disabled={!wallet.canTransact}
               className="field min-w-0 flex-1 rounded-r-none"
             />
+            <button
+              type="button"
+              aria-label="质押 MAX"
+              onClick={fillStakeMax}
+              disabled={!wallet.canTransact || maxStakeDrip === 0n}
+              className="border-y border-line bg-surface px-3 text-xs font-semibold text-accent transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              MAX
+            </button>
             <button
               type="button"
               onClick={() => requestAction('stake')}
@@ -219,6 +281,7 @@ export function PoolActions({
           </p>
           <div className="mt-4 flex">
             <input
+              aria-label="解质押 CFX 数量"
               value={unstakeAmount}
               onChange={(event) => setUnstakeAmount(event.target.value)}
               placeholder="CFX 数量"
@@ -226,6 +289,15 @@ export function PoolActions({
               disabled={!wallet.canTransact}
               className="field min-w-0 flex-1 rounded-r-none"
             />
+            <button
+              type="button"
+              aria-label="解质押 MAX"
+              onClick={fillUnstakeMax}
+              disabled={!wallet.canTransact || unstakeableVotes === 0n}
+              className="border-y border-line bg-surface px-3 text-xs font-semibold text-accent transition hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              MAX
+            </button>
             <button
               type="button"
               onClick={() => requestAction('unstake')}
