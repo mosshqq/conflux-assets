@@ -87,6 +87,7 @@
 - `main` 通过 GitHub Pages 自动部署到 `https://mosshqq.github.io/conflux-assets/`。
 - vSwap/eSpace 测试网功能已随 PR #1、接手文档已随 PR #2 合入并于 2026-07-03 部署；
   真实主/测试网只读数据已验证。
-- 本轮钱包切网、生命周期折叠和 MAX 表单改动已通过 76 项单测、6 项 E2E、类型、Lint、
-  格式和生产构建；真实 Fluent 切网与写交易仍按 `docs/TODO.md` 接续。
+- 钱包切网、生命周期折叠和 MAX 表单已随 PR #3 于 2026-07-06 部署；对应版本通过
+  76 项单测、6 项 E2E、类型、Lint、格式和生产构建，生产资源已核验包含新控件。
+- 真实 Fluent 切网与写交易仍按 `docs/TODO.md` 接续。
 - Core 测试网已验证增加质押、回执和状态回读；剩余真实钱包闭环见 `docs/TODO.md`。
