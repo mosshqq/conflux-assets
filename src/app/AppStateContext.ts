@@ -1,5 +1,6 @@
 import { createContext } from 'react';
 import type { AddressBookmark, HomePoolSort, PoolConfig, PositionPoolSort } from '../domain/types';
+import type { PersistedStateV1 } from '../infrastructure/storage/localState';
 
 export interface AppStateValue {
   bookmarks: AddressBookmark[];
@@ -12,6 +13,8 @@ export interface AppStateValue {
   removeCustomPool: (address: string) => void;
   setHomePoolSort: (sort: HomePoolSort) => void;
   setPositionPoolSort: (sort: PositionPoolSort) => void;
+  exportState: () => PersistedStateV1;
+  importState: (state: PersistedStateV1) => void;
 }
 
 export const AppStateContext = createContext<AppStateValue | undefined>(undefined);

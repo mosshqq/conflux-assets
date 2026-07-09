@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   EMPTY_PERSISTED_STATE,
+  mergePersistedState,
   readPersistedState,
   writePersistedState,
+  type PersistedStateV1,
 } from '../infrastructure/storage/localState';
 import type { AddressBookmark, HomePoolSort, PoolConfig, PositionPoolSort } from '../domain/types';
 import { AppStateContext } from './AppStateContext';
@@ -55,6 +57,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((current) => ({ ...current, positionPoolSort }));
   }, []);
 
+  const exportState = useCallback(() => state, [state]);
+
+  const importState = useCallback((importedState: PersistedStateV1) => {
+    setState((current) => mergePersistedState(current, importedState));
+  }, []);
+
   const value = useMemo(
     () => ({
       bookmarks: state.bookmarks,
@@ -67,9 +75,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       removeCustomPool,
       setHomePoolSort,
       setPositionPoolSort,
+      exportState,
+      importState,
     }),
     [
       addCustomPool,
+      exportState,
+      importState,
       removeBookmark,
       removeCustomPool,
       saveBookmark,

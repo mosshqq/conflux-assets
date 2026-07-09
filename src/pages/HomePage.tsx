@@ -4,6 +4,7 @@ import { useAppState } from '../app/useAppState';
 import { CORE_NETWORK, ESPACE_NETWORK } from '../config/network';
 import { normalizeQueryAddress, shortenAddress } from '../domain/address';
 import { PoolManager } from '../features/pools/PoolManager';
+import { BackupControls } from '../features/settings/BackupControls';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -56,6 +57,8 @@ export function HomePage() {
           暂不支持钱包连接或交易。
         </p>
       </section>
+
+      <BackupControls />
 
       <section>
         <div className="mb-4 flex items-center justify-between">

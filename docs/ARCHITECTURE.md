@@ -28,6 +28,7 @@ src/
   domain/                 地址、金额、聚合、交易规则与类型
   features/dashboard/     Core 聚合、eSpace 余额/vSwap 仓位、地址切换与列表总额
   features/pools/         池集合、概览 Query、校验、排序、生命周期、管理与卡片
+  features/settings/      本地数据导入导出 UI
   features/theme/         主题解析、Provider、切换控件
   features/wallet/        Fluent Provider、门禁、交易 UI
   infrastructure/conflux/ Core/eSpace RPC、合约读取、交易构造
@@ -102,6 +103,9 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
 - 主网使用 `conflux-pos-dashboard:v1`，本地 Core 测试网使用
   `conflux-pos-dashboard:core-testnet:v1`；两者都只保存 `bookmarks`、`customPools`、首页
   与地址明细的池排序偏好，链上数据不落盘。
+- 本地数据导出文件只包含当前 Core 网络范围的上述持久化状态，并写入 `coreNetworkId`；
+  导入时必须匹配当前 Core 网络，格式通过 `infrastructure/storage/localState.ts` 校验后再
+  与现有收藏合并，重复地址或池以导入文件为准。
 - 主题使用独立 key `conflux-assets:theme`，值为 `system | light | dark`。
 - 主题控件使用 Lucide 图标按钮按 `system -> light -> dark` 循环切换。
 - 颜色定义在 `src/styles.css` 的 CSS 变量，Tailwind 只引用语义颜色。
@@ -132,9 +136,9 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
 - 准备交易后按 `value + gas * gasPrice + storageLimit * 10^18 / 1024` 校验余额，全部
   使用 `bigint`。
 - 单元测试覆盖网络选择/切换、钱包表单 MAX、生命周期折叠、池查询/排序、`inQueue`
-  解质押门禁和动态交易成本；Playwright 覆盖读取范围、池排序控件、主题、地址切换与
-  布局。vSwap 单元测试覆盖 TickMath、subgraph 分页、逐仓位失败隔离、token 聚合和
-  warning-only 下限。真实钱包写流程另按 `docs/TODO.md` 验证。
+  解质押门禁、动态交易成本和本地数据导入导出；Playwright 覆盖读取范围、池排序控件、
+  主题、地址切换与布局。vSwap 单元测试覆盖 TickMath、subgraph 分页、逐仓位失败隔离、
+  token 聚合和 warning-only 下限。真实钱包写流程另按 `docs/TODO.md` 验证。
 
 ## 构建与部署
 

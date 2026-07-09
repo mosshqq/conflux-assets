@@ -18,8 +18,9 @@
   可请求 Fluent 切网，生命周期默认收起，质押/解质押支持安全 MAX。
 - eSpace：原生 CFX 余额和 vSwap managed V3 NFT 仓位，展示 token 数量、区间状态、
   未领取手续费与 farming 奖励；全部只读。
-- 通用：地址快捷切换与总 CFX、语义颜色主题、稳定滚动条槽位、GitHub Pages 部署。
-- vSwap/eSpace 测试网已在 `main` 发布；当前发布状态、验收基线和后续任务以
+- 通用：地址快捷切换与总 CFX、本地数据导入导出、语义颜色主题、稳定滚动条槽位、
+  GitHub Pages 部署。
+- 当前发布状态、验收基线和后续任务以
   `docs/TODO.md` 为准。
 
 ## 技术栈
