@@ -5,7 +5,13 @@ import { MetricCard } from '../components/MetricCard';
 import { CORE_NETWORK, ESPACE_NETWORK } from '../config/network';
 import { normalizeQueryAddress, shortenAddress, type QueryAddressSpace } from '../domain/address';
 import { formatCfx } from '../domain/money';
-import { aggregatePortfolioTotal, aggregatePositions, hasPosition } from '../domain/portfolio';
+import {
+  aggregatePortfolioTotal,
+  aggregatePositions,
+  estimateNextStake,
+  hasPosition,
+  type NextStakeEstimate,
+} from '../domain/portfolio';
 import type { ESpaceAddress, PoolPosition, PositionPoolSort } from '../domain/types';
 import { AddressSwitcher } from '../features/dashboard/AddressSwitcher';
 import { VSwapPositionsSection } from '../features/dashboard/VSwapPositionsSection';
@@ -26,6 +32,57 @@ const POSITION_POOL_SORT_OPTIONS: Array<{ value: PositionPoolSort; label: string
   { value: 'claimable-desc', label: '未领取收益：高到低' },
   { value: 'claimable-asc', label: '未领取收益：低到高' },
 ];
+
+function formatEstimatedStakeTime(secondsUntilTarget: bigint): string {
+  const timestampMs = BigInt(Date.now()) + secondsUntilTarget * 1_000n;
+  const maximumDateMs = 8_640_000_000_000_000n;
+  if (timestampMs <= maximumDateMs) {
+    return new Intl.DateTimeFormat('zh-CN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      hour12: false,
+    }).format(new Date(Number(timestampMs)));
+  }
+
+  const days = secondsUntilTarget / 86_400n;
+  return `约 ${days.toString()} 天后`;
+}
+
+function nextStakeDisplay(
+  estimate: NextStakeEstimate | null,
+  balanceLoaded: boolean,
+  pendingPoolCount: number,
+  missingPoolCount: number,
+): { value: string; hint: string } {
+  if (!balanceLoaded) {
+    return { value: '—', hint: '等待可用余额读取完成' };
+  }
+  if (pendingPoolCount > 0) {
+    return { value: '—', hint: `仍有 ${pendingPoolCount} 个池读取中` };
+  }
+  if (missingPoolCount > 0 || !estimate) {
+    return { value: '—', hint: '池数据不完整，无法按全部有效质押估算' };
+  }
+  if (estimate.status === 'ready') {
+    return {
+      value: '现在可质押',
+      hint: `可用余额 + 未领取收益为 ${formatCfx(estimate.liquidDrip, 6)} CFX，已达到 ${formatCfx(estimate.targetDrip, 0)} CFX 的一票及基础费用预留。`,
+    };
+  }
+  if (estimate.status === 'estimated') {
+    return {
+      value: formatEstimatedStakeTime(estimate.secondsUntilTarget),
+      hint: `按所有有效质押的合约 APY 匀速估算，届时可用余额 + 未领取收益将达到 ${formatCfx(estimate.targetDrip, 0)} CFX。`,
+    };
+  }
+
+  const unavailableHints = {
+    'missing-apy': '有有效质押的池未提供 APY，无法完整估算。',
+    'no-active-stake': '暂无有效质押，无法按 APY 估算收益增长。',
+    'zero-apy': '当前有效质押的 APY 为 0，无法估算收益增长。',
+  } as const;
+  return { value: '暂无法估算', hint: unavailableHints[estimate.reason] };
+}
 
 export function DashboardPage() {
   const params = useParams<{ address: string }>();
@@ -67,6 +124,18 @@ export function DashboardPage() {
     balanceQuery.data !== undefined && pendingPoolCount === 0
       ? aggregatePortfolioTotal(balanceQuery.data, summary)
       : undefined;
+  const nextStakeEstimate =
+    !isESpace &&
+    coreBalanceQuery.data !== undefined &&
+    positionQueries.every((query) => query.data !== undefined)
+      ? estimateNextStake(coreBalanceQuery.data, successfulPositions)
+      : null;
+  const nextStake = nextStakeDisplay(
+    nextStakeEstimate,
+    coreBalanceQuery.data !== undefined,
+    pendingPoolCount,
+    missingPoolCount,
+  );
   const isBookmarked = bookmarks.some((item) => item.address === address);
 
   const visiblePoolIndexes = useMemo(() => {
@@ -220,6 +289,12 @@ export function DashboardPage() {
               <MetricCard
                 label="未领取收益"
                 value={`${formatCfx(summary.claimableDrip, 6)} CFX`}
+                accent
+              />
+              <MetricCard
+                label="预计下次可质押时间"
+                value={nextStake.value}
+                hint={nextStake.hint}
                 accent
               />
             </section>

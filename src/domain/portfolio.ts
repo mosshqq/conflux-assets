@@ -1,5 +1,25 @@
 import type { PoolPosition, PortfolioSummary } from './types';
-import { votesToDrip } from './money';
+import { DRIP_PER_VOTE, GAS_RESERVE_DRIP, votesToDrip } from './money';
+
+const BASIS_POINTS_PER_YEAR = 10_000n;
+const SECONDS_PER_YEAR = 365n * 24n * 60n * 60n;
+
+export type NextStakeEstimate =
+  | {
+      status: 'ready';
+      liquidDrip: bigint;
+      targetDrip: bigint;
+    }
+  | {
+      status: 'estimated';
+      liquidDrip: bigint;
+      targetDrip: bigint;
+      secondsUntilTarget: bigint;
+    }
+  | {
+      status: 'unavailable';
+      reason: 'missing-apy' | 'no-active-stake' | 'zero-apy';
+    };
 
 export function aggregatePositions(positions: PoolPosition[]): PortfolioSummary {
   return positions.reduce<PortfolioSummary>(
@@ -34,6 +54,43 @@ export function aggregatePortfolioTotal(
   summary: PortfolioSummary,
 ): bigint {
   return availableBalanceDrip + summary.poolTotalDrip;
+}
+
+export function estimateNextStake(
+  availableBalanceDrip: bigint,
+  positions: PoolPosition[],
+): NextStakeEstimate {
+  const targetDrip = DRIP_PER_VOTE + GAS_RESERVE_DRIP;
+  const liquidDrip = positions.reduce(
+    (total, position) => total + position.claimableDrip,
+    availableBalanceDrip,
+  );
+
+  if (liquidDrip >= targetDrip) {
+    return { status: 'ready', liquidDrip, targetDrip };
+  }
+
+  const activePositions = positions.filter((position) => position.activeVotes > 0n);
+  if (activePositions.length === 0) {
+    return { status: 'unavailable', reason: 'no-active-stake' };
+  }
+  if (activePositions.some((position) => position.expectedApyBps === null)) {
+    return { status: 'unavailable', reason: 'missing-apy' };
+  }
+
+  const annualYieldWeight = activePositions.reduce(
+    (total, position) => total + votesToDrip(position.activeVotes) * position.expectedApyBps!,
+    0n,
+  );
+  if (annualYieldWeight === 0n) {
+    return { status: 'unavailable', reason: 'zero-apy' };
+  }
+
+  const remainingDrip = targetDrip - liquidDrip;
+  const numerator = remainingDrip * BASIS_POINTS_PER_YEAR * SECONDS_PER_YEAR;
+  const secondsUntilTarget = (numerator + annualYieldWeight - 1n) / annualYieldWeight;
+
+  return { status: 'estimated', liquidDrip, targetDrip, secondsUntilTarget };
 }
 
 export function hasPosition(position: PoolPosition): boolean {

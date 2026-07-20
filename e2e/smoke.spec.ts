@@ -124,6 +124,7 @@ test('pool sort controls persist the selected fields', async ({ page }) => {
   await page.goto(`/address/${encodeURIComponent(address)}`);
 
   await expect(page.getByText('Core 总资产')).toBeVisible();
+  await expect(page.getByText('预计下次可质押时间')).toBeVisible();
   const positionSort = page.getByLabel('地址 PoS 池排序');
   await expect(positionSort).toHaveValue('favorite');
   await positionSort.selectOption('claimable-asc');
