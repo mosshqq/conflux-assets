@@ -8,6 +8,7 @@ import { formatCfx } from '../domain/money';
 import {
   aggregatePortfolioTotal,
   aggregatePositions,
+  estimateDailyYield,
   estimateNextStake,
   hasPosition,
   type NextStakeEstimate,
@@ -130,6 +131,10 @@ export function DashboardPage() {
     positionQueries.every((query) => query.data !== undefined)
       ? estimateNextStake(coreBalanceQuery.data, successfulPositions)
       : null;
+  const expectedDailyYieldDrip =
+    !isESpace && positionQueries.every((query) => query.data !== undefined)
+      ? estimateDailyYield(successfulPositions)
+      : undefined;
   const nextStake = nextStakeDisplay(
     nextStakeEstimate,
     coreBalanceQuery.data !== undefined,
@@ -289,6 +294,24 @@ export function DashboardPage() {
               <MetricCard
                 label="未领取收益"
                 value={`${formatCfx(summary.claimableDrip, 6)} CFX`}
+                accent
+              />
+              <MetricCard
+                label="预计每日收益"
+                value={
+                  expectedDailyYieldDrip === undefined || expectedDailyYieldDrip === null
+                    ? '—'
+                    : `${formatCfx(expectedDailyYieldDrip, 6)} CFX`
+                }
+                hint={
+                  pendingPoolCount > 0
+                    ? `仍有 ${pendingPoolCount} 个池读取中`
+                    : missingPoolCount > 0
+                      ? '池数据不完整，无法按全部有效质押估算'
+                      : expectedDailyYieldDrip === null
+                        ? '有有效质押的池未提供 APY，无法完整估算'
+                        : '所有有效质押 × 各池合约 APY ÷ 365；基于近 7 天年化快照'
+                }
                 accent
               />
               <MetricCard

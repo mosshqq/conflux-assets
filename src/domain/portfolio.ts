@@ -2,7 +2,8 @@ import type { PoolPosition, PortfolioSummary } from './types';
 import { DRIP_PER_VOTE, GAS_RESERVE_DRIP, votesToDrip } from './money';
 
 const BASIS_POINTS_PER_YEAR = 10_000n;
-const SECONDS_PER_YEAR = 365n * 24n * 60n * 60n;
+const DAYS_PER_YEAR = 365n;
+const SECONDS_PER_YEAR = DAYS_PER_YEAR * 24n * 60n * 60n;
 
 export type NextStakeEstimate =
   | {
@@ -20,6 +21,17 @@ export type NextStakeEstimate =
       status: 'unavailable';
       reason: 'missing-apy' | 'no-active-stake' | 'zero-apy';
     };
+
+function aggregateAnnualYieldWeight(activePositions: PoolPosition[]): bigint | null {
+  if (activePositions.some((position) => position.expectedApyBps === null)) {
+    return null;
+  }
+
+  return activePositions.reduce(
+    (total, position) => total + votesToDrip(position.activeVotes) * position.expectedApyBps!,
+    0n,
+  );
+}
 
 export function aggregatePositions(positions: PoolPosition[]): PortfolioSummary {
   return positions.reduce<PortfolioSummary>(
@@ -74,14 +86,10 @@ export function estimateNextStake(
   if (activePositions.length === 0) {
     return { status: 'unavailable', reason: 'no-active-stake' };
   }
-  if (activePositions.some((position) => position.expectedApyBps === null)) {
+  const annualYieldWeight = aggregateAnnualYieldWeight(activePositions);
+  if (annualYieldWeight === null) {
     return { status: 'unavailable', reason: 'missing-apy' };
   }
-
-  const annualYieldWeight = activePositions.reduce(
-    (total, position) => total + votesToDrip(position.activeVotes) * position.expectedApyBps!,
-    0n,
-  );
   if (annualYieldWeight === 0n) {
     return { status: 'unavailable', reason: 'zero-apy' };
   }
@@ -91,6 +99,14 @@ export function estimateNextStake(
   const secondsUntilTarget = (numerator + annualYieldWeight - 1n) / annualYieldWeight;
 
   return { status: 'estimated', liquidDrip, targetDrip, secondsUntilTarget };
+}
+
+export function estimateDailyYield(positions: PoolPosition[]): bigint | null {
+  const activePositions = positions.filter((position) => position.activeVotes > 0n);
+  const annualYieldWeight = aggregateAnnualYieldWeight(activePositions);
+  return annualYieldWeight === null
+    ? null
+    : annualYieldWeight / (BASIS_POINTS_PER_YEAR * DAYS_PER_YEAR);
 }
 
 export function hasPosition(position: PoolPosition): boolean {

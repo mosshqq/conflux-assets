@@ -3,6 +3,7 @@ import { DRIP_PER_CFX, DRIP_PER_VOTE } from './money';
 import {
   aggregatePortfolioTotal,
   aggregatePositions,
+  estimateDailyYield,
   estimateNextStake,
   hasPosition,
   maxUnstakeVotes,
@@ -127,5 +128,29 @@ describe('portfolio', () => {
       status: 'unavailable',
       reason: 'zero-apy',
     });
+  });
+
+  it('estimates one day of yield from all active stakes and their pool APYs', () => {
+    const dailyYield = estimateDailyYield([
+      position({
+        activeVotes: 1n,
+        pendingVotes: 10n,
+        unlockedVotes: 10n,
+        expectedApyBps: 1_000n,
+      }),
+      position({ activeVotes: 2n, expectedApyBps: 2_000n }),
+    ]);
+
+    expect(dailyYield).toBe((500n * DRIP_PER_CFX) / 365n);
+  });
+
+  it('does not report a partial daily yield when an active pool has no APY', () => {
+    expect(
+      estimateDailyYield([
+        position({ activeVotes: 1n, expectedApyBps: 1_000n }),
+        position({ activeVotes: 1n, expectedApyBps: null }),
+      ]),
+    ).toBeNull();
+    expect(estimateDailyYield([position({ activeVotes: 0n, expectedApyBps: null })])).toBe(0n);
   });
 });
