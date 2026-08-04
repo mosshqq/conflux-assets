@@ -23,6 +23,7 @@ import { PoolCard } from '../features/pools/PoolCard';
 import { PoolSortSelect } from '../features/pools/PoolSortSelect';
 import { sortPositionIndexes } from '../features/pools/poolSorting';
 import { usePools } from '../features/pools/usePools';
+import { ClaimAllRewards } from '../features/wallet/ClaimAllRewards';
 
 const POSITION_POOL_SORT_OPTIONS: Array<{ value: PositionPoolSort; label: string }> = [
   { value: 'favorite', label: '收藏顺序' },
@@ -321,6 +322,12 @@ export function DashboardPage() {
                 accent
               />
             </section>
+
+            <ClaimAllRewards
+              address={address}
+              positions={successfulPositions}
+              poolCount={pools.length}
+            />
 
             {missingPoolCount > 0 ? (
               <section className="rounded-2xl border border-warning-border bg-warning-surface p-5">

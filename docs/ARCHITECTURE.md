@@ -101,6 +101,10 @@ e2e/
   -> Query 失效刷新
 ```
 
+地址总览的一键领取只枚举成功读取且未领取收益大于等于当前最低门槛的收藏池；每笔交易
+都按上述流程单独重新读取钱包余额、准备交易、请求 Fluent 签名并等待回执。某笔被拒绝
+或失败时停止，未发送的池保留给用户稍后重试。
+
 页面与组件不得绕过 `features/wallet` 和 `infrastructure/conflux`。
 SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确认弹窗、回执状态和 Query
 失效刷新的 UI 端到端验证。
@@ -110,6 +114,8 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
 - 主网使用 `conflux-pos-dashboard:v1`，本地 Core 测试网使用
   `conflux-pos-dashboard:core-testnet:v1`；两者都只保存 `bookmarks`、`customPools`、首页
   与地址明细的池排序偏好，链上数据不落盘。
+- 一键领取最低收益使用独立的、按 Core 网络隔离的本地设置 key，十进制 Drip 以字符串
+  保存；该设置不属于备份内容，不会随导入导出覆盖。
 - 本地数据导出文件只包含当前 Core 网络范围的上述持久化状态，并写入 `coreNetworkId`；
   导入时必须匹配当前 Core 网络，格式通过 `infrastructure/storage/localState.ts` 校验后再
   与现有收藏合并，重复地址或池以导入文件为准。
