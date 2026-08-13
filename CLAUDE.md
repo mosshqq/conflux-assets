@@ -18,8 +18,9 @@
   提取本金及逐笔确认的一键领取五类受门禁保护的交易 UI；一键领取可按当前 Core 网络
   配置最低收益门槛。钱包网络不匹配时可请求 Fluent 切网，生命周期默认收起，质押/解质押
   支持安全 MAX。
-- eSpace：原生 CFX 余额和 vSwap managed V3 NFT 仓位，展示 token 数量、区间状态、
-  未领取手续费与 farming 奖励；全部只读。
+- eSpace：原生 CFX 余额和 vSwap managed V3 NFT 仓位；列表展示 token 数量、区间状态、
+  未领取手续费与 farming 奖励，详情页展示完整 Tick/价格区间、当前价格、双向报价及基于
+  活动 incentive 的预计每日奖励；全部只读。
 - 通用：地址快捷切换与总 CFX、本地数据导入导出、语义颜色主题、稳定滚动条槽位、
   GitHub Pages 部署。
 - 当前发布状态、验收基线和后续任务以

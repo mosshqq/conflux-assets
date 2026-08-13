@@ -25,7 +25,11 @@
 - 查询：Core 余额、多池并发与失败隔离；eSpace `eth_getBalance` 独立查询，并通过
   vSwap staker subgraph 发现地址仓位、通过 eSpace 合约读取仓位资产、手续费和奖励。
 - vSwap：分页发现 managed NFT；逐仓位读取 Position Manager、池状态、token 元数据、
-  未领取手续费与 farming 奖励；支持单仓位重试和部分结果下限。
+  仓位资产、未领取手续费与 farming 奖励；支持单仓位重试和部分结果下限。独立详情路由
+  只允许读取 staker subgraph 为当前地址发现的 managed NFT，并与列表复用包含 eSpace
+  chain ID、地址和 token ID 的 TanStack Query key。
+- vSwap 详情：展示完整 Tick 区间、基于池 `slot0.sqrtPriceX96` 的当前价格、双向报价切换、
+  仓位资产、手续费、奖励，以及按活动 incentive 仓位级奖励速率换算的预计每日奖励。
 - 聚合：有效质押、解质押中、可提取本金、未领取收益，以及可用余额加池内本金和收益的
   Core 总资产；存在未读取池时按下限展示。
 - Core 预计每日收益：逐池使用有效质押和链上 `poolAPY()` 基点值计算一天预计收益后
@@ -68,6 +72,16 @@
   为原生 CFX 可用余额。
 - vSwap 仓位资产按 token 地址分别聚合，不进行美元或 CFX 折算；整仓位失败或可选
   手续费/奖励读取 warning 都使汇总以 `≥` 标识下限。
+- vSwap 人类可读的 `token1 / token0` 价格按
+  `sqrtPriceX96² × 10^token0Decimals / (2^192 × 10^token1Decimals)` 计算；反向报价取
+  倒数并交换区间上下端点。计算和舍入使用 `bigint` 有理数与十进制字符串，不使用浮点
+  金额。
+- incentive 在 `startTime <= blockTimestamp < endTime` 时视为活动；同一奖励代币的活动
+  `rewardsPerSecondX32` 先汇总，再按 `floor(Σ(rate) × 86400 / 2^32)` 换算每日预计奖励。
+  非 `in-range` 仓位按 0 展示；区块时间不可用时显示不可用。该值是当前链上速率快照，
+  不保证未来奖励。
+- vSwap 详情继续继承 warning/下限语义；可选手续费或奖励读取不完整时，成功读取金额和
+  预计值以 `≥` 标识。
 - 地址总览 Core 总资产：可用余额加成功读取池的有效质押、解质押中、可提取本金和
   未领取收益；未完成的池查询不展示总值，池读取失败时以 `≥` 标识已读取资产下限。
 - `poolAPY()` 返回基点整数，例如 `756` 展示为 `7.56%`；旧池不支持时 APY 为不可用，
@@ -87,7 +101,8 @@
 - eSpace 不支持通用代币余额、PoS 池、钱包连接或写交易；只额外读取 vSwap 管理的 V3
   NFT 仓位。
 - 不接入旧 vSwap VST/veVST 锁仓；仓库中的旧主网 VotingEscrow 地址链上已无合约代码。
-- vSwap 独立仓位详情页、完整价格区间、当前价格和预计每日奖励留待后续任务。
+- vSwap 仓位详情和每日奖励均为只读链上快照；不提供钱包操作、领取交易、美元/CFX
+  折算或未来收益保证。
 - eSpace 测试网仅由本地 `pnpm dev:espace-testnet` 启用，生产构建即使使用同名 mode
   也必须回退主网。
 - 不支持 Nucleon、PHX V2 等非标准协议。
@@ -109,3 +124,7 @@
 - Core 测试网真实 Fluent 闭环已完成：已验证网络不匹配时的切网拒绝与成功、两笔独立
   解质押、两条 `outQueue`、本金解锁后的提取、交易回执和 Query 刷新。全流程完成后通过
   91 项单测、6 项 E2E、类型、Lint、格式和生产构建。
+- vSwap 仓位详情已于 2026-08-13 在当前工作区完成；已使用真实 eSpace 主网和测试网
+  managed NFT 样本核验详情读取、双向价格、活动 incentive 每日奖励与 375px 布局，并
+  通过 113 项单测、8 项 E2E、类型、Lint、格式和生产构建。截至本次记录位于当前功能
+  分支，尚未合入 `main` 或部署，生产站点仍为上一已发布版本。

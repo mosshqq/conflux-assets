@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { VSwapDiscoveredPosition, VSwapPosition, VSwapToken } from '../../domain/types';
 import { VSwapPositionsSection } from './VSwapPositionsSection';
@@ -34,6 +35,7 @@ const position: VSwapPosition = {
   tickLower: -10,
   tickUpper: 10,
   currentTick: 0,
+  sqrtPriceX96: 1n << 96n,
   liquidity: 1n,
   status: 'in-range',
   token0Amount: { token: token0, amount: 1_250_000n },
@@ -46,6 +48,8 @@ const position: VSwapPosition = {
       unsettledAmount: 30_000n,
       settledAmount: 20_000n,
       totalAmount: 50_000n,
+      estimatedDailyAmount: 10_000n,
+      activeIncentiveCount: 1,
     },
   ],
   warnings: [],
@@ -54,33 +58,36 @@ const position: VSwapPosition = {
 describe('VSwapPositionsSection', () => {
   it('renders token amounts and marks partial aggregates as lower bounds', () => {
     render(
-      <VSwapPositionsSection
-        discoveryQuery={
-          {
-            data: discovered,
-            isPending: false,
-            isError: false,
-            refetch: vi.fn(),
-          } as never
-        }
-        positionQueries={
-          [
+      <MemoryRouter>
+        <VSwapPositionsSection
+          address={owner}
+          discoveryQuery={
             {
-              data: position,
+              data: discovered,
               isPending: false,
               isError: false,
               refetch: vi.fn(),
-            },
-            {
-              data: undefined,
-              error: new Error('RPC failed'),
-              isPending: false,
-              isError: true,
-              refetch: vi.fn(),
-            },
-          ] as never
-        }
-      />,
+            } as never
+          }
+          positionQueries={
+            [
+              {
+                data: position,
+                isPending: false,
+                isError: false,
+                refetch: vi.fn(),
+              },
+              {
+                data: undefined,
+                error: new Error('RPC failed'),
+                isPending: false,
+                isError: true,
+                refetch: vi.fn(),
+              },
+            ] as never
+          }
+        />
+      </MemoryRouter>,
     );
 
     expect(screen.getByText('vSwap LP Farming')).toBeVisible();
@@ -90,30 +97,37 @@ describe('VSwapPositionsSection', () => {
     expect(screen.getByText('≥ 0.05 TK0')).toBeVisible();
     expect(screen.getByText('vSwap NFT #8')).toBeVisible();
     expect(screen.getByRole('button', { name: '重试该仓位' })).toBeVisible();
+    expect(screen.getByRole('link', { name: '查看仓位详情' })).toHaveAttribute(
+      'href',
+      `/address/${owner}/vswap/7`,
+    );
   });
 
   it('marks aggregates as lower bounds when optional position data has warnings', () => {
     render(
-      <VSwapPositionsSection
-        discoveryQuery={
-          {
-            data: [discovered[0]],
-            isPending: false,
-            isError: false,
-            refetch: vi.fn(),
-          } as never
-        }
-        positionQueries={
-          [
+      <MemoryRouter>
+        <VSwapPositionsSection
+          address={owner}
+          discoveryQuery={
             {
-              data: { ...position, warnings: ['farming 奖励计划读取失败'] },
+              data: [discovered[0]],
               isPending: false,
               isError: false,
               refetch: vi.fn(),
-            },
-          ] as never
-        }
-      />,
+            } as never
+          }
+          positionQueries={
+            [
+              {
+                data: { ...position, warnings: ['farming 奖励计划读取失败'] },
+                isPending: false,
+                isError: false,
+                refetch: vi.fn(),
+              },
+            ] as never
+          }
+        />
+      </MemoryRouter>,
     );
 
     expect(screen.getByText('≥ 1.25 TK0')).toBeVisible();

@@ -9,7 +9,9 @@ import type {
 const MAX_TICK = 887272;
 const Q32 = 1n << 32n;
 const Q96 = 1n << 96n;
+const Q192 = 1n << 192n;
 const MAX_UINT256 = (1n << 256n) - 1n;
+const SECONDS_PER_DAY = 86_400n;
 
 const TICK_MULTIPLIERS = [
   [0x2, 0xfff97272373d413259a46990580e213an],
@@ -93,6 +95,150 @@ export function resolveVSwapPositionStatus(
 ): VSwapPositionStatus {
   if (liquidity === 0n) return 'closed';
   return currentTick >= tickLower && currentTick < tickUpper ? 'in-range' : 'out-of-range';
+}
+
+export type VSwapPriceDirection = 'token1-per-token0' | 'token0-per-token1';
+
+export interface VSwapPriceRatio {
+  numerator: bigint;
+  denominator: bigint;
+}
+
+export interface VSwapPriceRange {
+  minimum: VSwapPriceRatio;
+  current: VSwapPriceRatio;
+  maximum: VSwapPriceRatio;
+}
+
+function validateTokenDecimals(decimals: number): void {
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 255) {
+    throw new Error('vSwap 代币精度无效');
+  }
+}
+
+export function calculateVSwapPrice(
+  sqrtPriceX96: bigint,
+  token0Decimals: number,
+  token1Decimals: number,
+  direction: VSwapPriceDirection,
+): VSwapPriceRatio {
+  if (sqrtPriceX96 <= 0n) throw new Error('vSwap 平方根价格无效');
+  validateTokenDecimals(token0Decimals);
+  validateTokenDecimals(token1Decimals);
+
+  const squaredPrice = sqrtPriceX96 * sqrtPriceX96;
+  const token0Scale = 10n ** BigInt(token0Decimals);
+  const token1Scale = 10n ** BigInt(token1Decimals);
+  const token1PerToken0 = {
+    numerator: squaredPrice * token0Scale,
+    denominator: Q192 * token1Scale,
+  };
+
+  return direction === 'token1-per-token0'
+    ? token1PerToken0
+    : {
+        numerator: token1PerToken0.denominator,
+        denominator: token1PerToken0.numerator,
+      };
+}
+
+export function calculateVSwapPriceRange({
+  sqrtPriceX96,
+  tickLower,
+  tickUpper,
+  token0Decimals,
+  token1Decimals,
+  direction,
+}: {
+  sqrtPriceX96: bigint;
+  tickLower: number;
+  tickUpper: number;
+  token0Decimals: number;
+  token1Decimals: number;
+  direction: VSwapPriceDirection;
+}): VSwapPriceRange {
+  if (tickLower >= tickUpper) throw new Error('vSwap 价格区间无效');
+  const lowerTickPrice = calculateVSwapPrice(
+    getSqrtRatioAtTick(tickLower),
+    token0Decimals,
+    token1Decimals,
+    direction,
+  );
+  const upperTickPrice = calculateVSwapPrice(
+    getSqrtRatioAtTick(tickUpper),
+    token0Decimals,
+    token1Decimals,
+    direction,
+  );
+
+  return {
+    minimum: direction === 'token1-per-token0' ? lowerTickPrice : upperTickPrice,
+    current: calculateVSwapPrice(sqrtPriceX96, token0Decimals, token1Decimals, direction),
+    maximum: direction === 'token1-per-token0' ? upperTickPrice : lowerTickPrice,
+  };
+}
+
+export function formatVSwapPrice(
+  price: VSwapPriceRatio,
+  significantDigits = 8,
+  maximumFractionDigits = 24,
+): string {
+  if (price.numerator < 0n || price.denominator <= 0n) {
+    throw new Error('vSwap 价格比例无效');
+  }
+  if (!Number.isInteger(significantDigits) || significantDigits < 1) {
+    throw new Error('vSwap 价格有效位数无效');
+  }
+  if (!Number.isInteger(maximumFractionDigits) || maximumFractionDigits < 0) {
+    throw new Error('vSwap 价格小数位数无效');
+  }
+  if (price.numerator === 0n) return '0';
+
+  const whole = price.numerator / price.denominator;
+  let fractionDigits: number;
+  if (whole > 0n) {
+    fractionDigits = Math.min(
+      maximumFractionDigits,
+      Math.max(0, significantDigits - whole.toString().length),
+    );
+  } else {
+    let scaledNumerator = price.numerator;
+    let leadingZeroCount = 0;
+    while (scaledNumerator < price.denominator && leadingZeroCount < maximumFractionDigits) {
+      scaledNumerator *= 10n;
+      if (scaledNumerator < price.denominator) leadingZeroCount += 1;
+    }
+    if (scaledNumerator < price.denominator) {
+      return maximumFractionDigits === 0
+        ? '< 1'
+        : `< 0.${'0'.repeat(Math.max(0, maximumFractionDigits - 1))}1`;
+    }
+    fractionDigits = Math.min(maximumFractionDigits, leadingZeroCount + significantDigits);
+  }
+
+  const scale = 10n ** BigInt(fractionDigits);
+  const rounded = (price.numerator * scale + price.denominator / 2n) / price.denominator;
+  if (rounded === 0n) {
+    return fractionDigits === 0 ? '< 1' : `< 0.${'0'.repeat(fractionDigits - 1)}1`;
+  }
+
+  const roundedWhole = rounded / scale;
+  if (fractionDigits === 0) return roundedWhole.toLocaleString('en-US');
+  const fraction = (rounded % scale).toString().padStart(fractionDigits, '0').replace(/0+$/, '');
+  return `${roundedWhole.toLocaleString('en-US')}${fraction ? `.${fraction}` : ''}`;
+}
+
+export function isVSwapIncentiveActive(
+  startTime: bigint,
+  endTime: bigint,
+  blockTimestamp: bigint,
+): boolean {
+  return blockTimestamp >= startTime && blockTimestamp < endTime;
+}
+
+export function estimateDailyVSwapReward(rewardsPerSecondX32: bigint): bigint {
+  if (rewardsPerSecondX32 < 0n) throw new Error('vSwap 奖励速率不能为负数');
+  return (rewardsPerSecondX32 * SECONDS_PER_DAY) / Q32;
 }
 
 export function aggregateVSwapAmounts(

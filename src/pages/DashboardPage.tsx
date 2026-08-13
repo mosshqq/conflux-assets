@@ -258,7 +258,7 @@ export function DashboardPage() {
               />
             </section>
 
-            <VSwapPositionsSection {...vSwapQueries} />
+            <VSwapPositionsSection address={address as ESpaceAddress} {...vSwapQueries} />
           </>
         ) : (
           <>
