@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { VSwapPosition, VSwapToken } from '../../domain/types';
@@ -95,5 +95,51 @@ describe('VSwapPositionDetails', () => {
 
     expect(screen.getByText(/活动 incentive 数量无法完整判断/)).toBeVisible();
     expect(screen.queryByText('当前没有活动 incentive。')).not.toBeInTheDocument();
+  });
+
+  it('marks fee amounts as lower bounds when optional reads are incomplete', () => {
+    render(
+      <VSwapPositionDetails
+        position={{
+          ...position,
+          unclaimedFee0: { ...position.unclaimedFee0, amount: 0n },
+          unclaimedFee1: { ...position.unclaimedFee1, amount: 0n },
+          warnings: ['未领取手续费模拟读取失败'],
+        }}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    const feeSection = screen.getByRole('heading', { name: '未领取手续费' }).closest('section');
+    expect(feeSection).not.toBeNull();
+    expect(within(feeSection!).getByText('≥ 0 USDC')).toBeVisible();
+    expect(within(feeSection!).getByText('≥ 0 WCFX')).toBeVisible();
+  });
+
+  it('preserves an unknown daily estimate while the position is out of range', () => {
+    render(
+      <VSwapPositionDetails
+        position={{
+          ...position,
+          status: 'out-of-range',
+          currentTick: 20,
+          rewards: [
+            {
+              ...position.rewards[0]!,
+              estimatedDailyAmount: null,
+              activeIncentiveCount: null,
+            },
+          ],
+          warnings: ['最新区块时间读取失败，无法估算每日 farming 奖励'],
+        }}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    const farmingSection = screen.getByRole('heading', { name: 'Farming 奖励' }).closest('section');
+    expect(farmingSection).not.toBeNull();
+    expect(within(farmingSection!).getByText('—')).toBeVisible();
+    expect(within(farmingSection!).queryByText('0 WCFX')).not.toBeInTheDocument();
+    expect(screen.getByText(/活动 incentive 数量无法完整判断/)).toBeVisible();
   });
 });

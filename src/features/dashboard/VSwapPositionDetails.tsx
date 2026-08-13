@@ -30,11 +30,20 @@ function formatDetailedTokenAmount(amount: bigint, decimals: number): string {
   return formatted;
 }
 
-function TokenAmountCard({ label, value }: { label: string; value: VSwapTokenAmount }) {
+function TokenAmountCard({
+  label,
+  value,
+  lowerBound = false,
+}: {
+  label: string;
+  value: VSwapTokenAmount;
+  lowerBound?: boolean;
+}) {
   return (
     <div className="rounded-2xl border border-line bg-panel p-5">
       <p className="text-sm text-muted">{label}</p>
       <p className="mt-2 break-all font-mono text-lg font-semibold">
+        {lowerBound ? '≥ ' : ''}
         {formatDetailedTokenAmount(value.amount, value.token.decimals)} {value.token.symbol}
       </p>
       <p className="mt-2 break-all text-xs text-muted">{value.token.address}</p>
@@ -159,8 +168,16 @@ export function VSwapPositionDetails({
       <section>
         <h2 className="text-xl font-semibold">未领取手续费</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <TokenAmountCard label={token0.symbol} value={position.unclaimedFee0} />
-          <TokenAmountCard label={token1.symbol} value={position.unclaimedFee1} />
+          <TokenAmountCard
+            label={token0.symbol}
+            value={position.unclaimedFee0}
+            lowerBound={lowerBound}
+          />
+          <TokenAmountCard
+            label={token1.symbol}
+            value={position.unclaimedFee1}
+            lowerBound={lowerBound}
+          />
         </div>
       </section>
 
@@ -175,7 +192,12 @@ export function VSwapPositionDetails({
         {position.rewards.length ? (
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
             {position.rewards.map((reward) => {
-              const dailyAmount = position.status === 'in-range' ? reward.estimatedDailyAmount : 0n;
+              const dailyAmount =
+                reward.estimatedDailyAmount === null
+                  ? null
+                  : position.status === 'in-range'
+                    ? reward.estimatedDailyAmount
+                    : 0n;
               const hasActiveIncentive = (reward.activeIncentiveCount ?? 0) > 0;
               return (
                 <article
