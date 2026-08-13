@@ -100,6 +100,8 @@ export interface VSwapReward {
   unsettledAmount: bigint;
   settledAmount: bigint;
   totalAmount: bigint;
+  estimatedDailyAmount: bigint | null;
+  activeIncentiveCount: number | null;
 }
 
 export type VSwapPositionStatus = 'in-range' | 'out-of-range' | 'closed';
@@ -110,6 +112,7 @@ export interface VSwapPosition {
   tickLower: number;
   tickUpper: number;
   currentTick: number;
+  sqrtPriceX96: bigint;
   liquidity: bigint;
   status: VSwapPositionStatus;
   token0Amount: VSwapTokenAmount;

@@ -1,7 +1,8 @@
+import { Link } from 'react-router-dom';
 import { ESPACE_NETWORK } from '../../config/network';
 import { VSWAP_NETWORK } from '../../config/vswap';
 import { formatTokenAmount } from '../../domain/money';
-import type { VSwapPosition, VSwapTokenAmount } from '../../domain/types';
+import type { ESpaceAddress, VSwapPosition, VSwapTokenAmount } from '../../domain/types';
 import { aggregateVSwapAmounts } from '../../domain/vswap';
 import type { useVSwapPositions } from './useVSwapPositions';
 
@@ -47,10 +48,18 @@ function AmountList({
   );
 }
 
-function PositionCard({ position, onRetry }: { position: VSwapPosition; onRetry: () => void }) {
+function PositionCard({
+  address,
+  position,
+  onRetry,
+}: {
+  address: ESpaceAddress;
+  position: VSwapPosition;
+  onRetry: () => void;
+}) {
   const statusTone =
     position.status === 'in-range'
-      ? 'border-success/30 bg-success/10 text-success'
+      ? 'border-accent/30 bg-accent/10 text-accent'
       : position.status === 'closed'
         ? 'border-line bg-surface text-muted'
         : 'border-warning-border bg-warning-surface text-warning';
@@ -121,6 +130,12 @@ function PositionCard({ position, onRetry }: { position: VSwapPosition; onRetry:
       ) : null}
 
       <div className="mt-4 flex flex-wrap gap-3 text-xs">
+        <Link
+          to={`/address/${encodeURIComponent(address)}/vswap/${position.discovered.tokenId.toString()}`}
+          className="text-accent hover:underline"
+        >
+          查看仓位详情
+        </Link>
         <a
           href={`${ESPACE_NETWORK.explorerUrl}/address/${position.discovered.poolAddress}`}
           target="_blank"
@@ -142,7 +157,11 @@ function PositionCard({ position, onRetry }: { position: VSwapPosition; onRetry:
   );
 }
 
-export function VSwapPositionsSection({ discoveryQuery, positionQueries }: VSwapQueries) {
+export function VSwapPositionsSection({
+  address,
+  discoveryQuery,
+  positionQueries,
+}: VSwapQueries & { address: ESpaceAddress }) {
   if (discoveryQuery.isPending) {
     return (
       <section className="rounded-2xl border border-line bg-panel p-6">
@@ -267,6 +286,7 @@ export function VSwapPositionsSection({ discoveryQuery, positionQueries }: VSwap
                 return (
                   <PositionCard
                     key={discovered?.tokenId.toString()}
+                    address={address}
                     position={query.data}
                     onRetry={() => void query.refetch()}
                   />

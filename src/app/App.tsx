@@ -7,6 +7,11 @@ import { HomePage } from '../pages/HomePage';
 const PoolDetailPage = lazy(() =>
   import('../pages/PoolDetailPage').then((module) => ({ default: module.PoolDetailPage })),
 );
+const VSwapPositionDetailPage = lazy(() =>
+  import('../pages/VSwapPositionDetailPage').then((module) => ({
+    default: module.VSwapPositionDetailPage,
+  })),
+);
 
 export function App() {
   return (
@@ -25,6 +30,20 @@ export function App() {
               }
             >
               <PoolDetailPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="address/:address/vswap/:tokenId"
+          element={
+            <Suspense
+              fallback={
+                <div className="rounded-2xl border border-line bg-panel p-8 text-center text-muted">
+                  正在加载 vSwap 仓位详情…
+                </div>
+              }
+            >
+              <VSwapPositionDetailPage />
             </Suspense>
           }
         />

@@ -1,7 +1,9 @@
-# Conflux PoS Dashboard
+# Conflux Assets Dashboard
 
-Conflux Core Space PoS 资产看板。生产环境使用主网；用户无需连接钱包即可查询地址余额和
-标准 PoS Pool 持仓，连接 Fluent 且网络与地址匹配后可执行完整质押生命周期。
+Conflux Core Space 与 eSpace 资产看板。生产环境使用主网；用户无需连接钱包即可查询
+Core 地址余额和标准 PoS Pool 持仓，连接 Fluent 且网络与地址匹配后可执行完整质押
+生命周期。eSpace 地址支持只读原生 CFX、vSwap managed V3 NFT 仓位列表及详情；详情
+展示完整价格区间、当前价格、双向报价和预计每日 farming 奖励，不连接钱包或发送交易。
 
 地址总览展示可用余额、质押各阶段、收益和总资产；池详情按实时区块展示增加质押锁定、
 可解质押额度、解质押等待和本金可提取进度。
@@ -26,7 +28,16 @@ pnpm dev:testnet
 ```
 
 该模式使用 `https://test.confluxrpc.com`、network ID `1` 和 `cfxtest:` 地址，并与主网
-收藏数据隔离。生产构建始终强制使用 Core Space 主网；eSpace 始终使用主网。
+收藏数据隔离。
+
+本地验证 eSpace 测试网只读数据：
+
+```bash
+pnpm dev:espace-testnet
+```
+
+生产构建始终强制使用 Core Space 主网 network ID `1029` 和 eSpace 主网 chain ID
+`1030`。Core 与 eSpace 测试网只能通过各自独立的本地开发命令启用。
 
 ## 验收
 

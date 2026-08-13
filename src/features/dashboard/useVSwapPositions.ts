@@ -6,9 +6,17 @@ import {
   readVSwapPosition,
 } from '../../infrastructure/conflux/vswapClient';
 
+export function vSwapDiscoveryQueryKey(address: ESpaceAddress | '') {
+  return ['vswap-positions', ESPACE_NETWORK.chainId, address] as const;
+}
+
+export function vSwapPositionQueryKey(address: ESpaceAddress | '', tokenId: bigint | null) {
+  return ['vswap-position', ESPACE_NETWORK.chainId, address, tokenId?.toString() ?? ''] as const;
+}
+
 export function useVSwapPositions(address: ESpaceAddress | '') {
   const discoveryQuery = useQuery({
-    queryKey: ['vswap-positions', ESPACE_NETWORK.chainId, address],
+    queryKey: vSwapDiscoveryQueryKey(address),
     queryFn: () => discoverVSwapPositions(address as ESpaceAddress),
     enabled: Boolean(address),
     refetchInterval: PORTFOLIO_REFRESH_INTERVAL,
@@ -16,7 +24,7 @@ export function useVSwapPositions(address: ESpaceAddress | '') {
 
   const positionQueries = useQueries({
     queries: (discoveryQuery.data ?? []).map((position) => ({
-      queryKey: ['vswap-position', ESPACE_NETWORK.chainId, address, position.tokenId.toString()],
+      queryKey: vSwapPositionQueryKey(address, position.tokenId),
       queryFn: () => readVSwapPosition(position),
       refetchInterval: PORTFOLIO_REFRESH_INTERVAL,
     })),

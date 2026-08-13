@@ -16,7 +16,12 @@ import type {
   VSwapReward,
   VSwapToken,
 } from '../../domain/types';
-import { calculatePositionAmounts, resolveVSwapPositionStatus } from '../../domain/vswap';
+import {
+  calculatePositionAmounts,
+  estimateDailyVSwapReward,
+  isVSwapIncentiveActive,
+  resolveVSwapPositionStatus,
+} from '../../domain/vswap';
 
 const espaceChain = defineChain({
   id: ESPACE_NETWORK.chainId,
@@ -34,6 +39,7 @@ const publicClient = createPublicClient({
 const MAX_UINT128 = (1n << 128n) - 1n;
 const DISCOVERY_PAGE_SIZE = 100;
 const MAX_DISCOVERED_POSITIONS = 10_000;
+const STAKE_REWARD_INFO_CALLER = '0x000000000000000000000000000000000000fe01';
 
 interface ManagedPositionPayload {
   id: string;
@@ -98,11 +104,17 @@ export async function discoverVSwapPositions(
     if (!Array.isArray(page)) throw new Error('vSwap 索引返回了无效仓位数据');
 
     positions.push(
-      ...page.map((position) => ({
-        tokenId: BigInt(position.id),
-        owner: asAddress(position.owner, '仓位所有者'),
-        poolAddress: asAddress(position.pool, 'vSwap 池'),
-      })),
+      ...page.map((position) => {
+        const positionOwner = asAddress(position.owner, '仓位所有者');
+        if (positionOwner !== owner.toLowerCase()) {
+          throw new Error('vSwap 索引返回了不属于查询地址的仓位');
+        }
+        return {
+          tokenId: BigInt(position.id),
+          owner: positionOwner,
+          poolAddress: asAddress(position.pool, 'vSwap 池'),
+        };
+      }),
     );
     if (page.length < DISCOVERY_PAGE_SIZE) return positions;
   }
@@ -168,27 +180,33 @@ async function readRewards(
     return [];
   }
 
+  let blockTimestamp: bigint | null = null;
+  if (keys.length > 0) {
+    try {
+      blockTimestamp = (await publicClient.getBlock()).timestamp;
+    } catch {
+      warnings.push('最新区块时间读取失败，无法估算每日 farming 奖励');
+    }
+  }
+
   const rewardResults = await Promise.all(
     keys.map(async (key) => {
       try {
-        const [stakeInfo, settledAmount] = await Promise.all([
-          publicClient.readContract({
-            address: VSWAP_NETWORK.staker,
-            abi: VSWAP_STAKER_ABI,
-            functionName: 'getStakeRewardInfo',
-            args: [key, discovered.tokenId],
-          }),
-          publicClient.readContract({
-            address: VSWAP_NETWORK.staker,
-            abi: VSWAP_STAKER_ABI,
-            functionName: 'rewards',
-            args: [discovered.tokenId, key.rewardToken],
-          }),
-        ]);
+        const stakeInfo = await publicClient.readContract({
+          account: STAKE_REWARD_INFO_CALLER,
+          address: VSWAP_NETWORK.staker,
+          abi: VSWAP_STAKER_ABI,
+          functionName: 'getStakeRewardInfo',
+          args: [key, discovered.tokenId],
+        });
+        const active =
+          blockTimestamp !== null &&
+          isVSwapIncentiveActive(key.startTime, key.endTime, blockTimestamp);
         return {
           rewardToken: key.rewardToken,
           unsettledAmount: stakeInfo[3],
-          settledAmount,
+          rewardsPerSecondX32: active ? stakeInfo[2] : 0n,
+          active,
         };
       } catch {
         warnings.push(`奖励计划 ${key.rewardToken} 读取失败`);
@@ -201,15 +219,29 @@ async function readRewards(
     ESpaceAddress,
     {
       unsettledAmount: bigint;
-      settledAmount: bigint;
+      rewardsPerSecondX32: bigint;
+      activeIncentiveCount: number;
     }
   >();
-  for (const result of rewardResults) {
-    if (!result) continue;
+  const failedRewardTokens = new Set<ESpaceAddress>();
+  for (const key of keys) {
+    grouped.set(key.rewardToken, {
+      unsettledAmount: 0n,
+      rewardsPerSecondX32: 0n,
+      activeIncentiveCount: 0,
+    });
+  }
+  for (const [index, result] of rewardResults.entries()) {
+    if (!result) {
+      const failedKey = keys[index];
+      if (failedKey) failedRewardTokens.add(failedKey.rewardToken);
+      continue;
+    }
     const current = grouped.get(result.rewardToken);
     grouped.set(result.rewardToken, {
       unsettledAmount: (current?.unsettledAmount ?? 0n) + result.unsettledAmount,
-      settledAmount: (current?.settledAmount ?? 0n) + result.settledAmount,
+      rewardsPerSecondX32: (current?.rewardsPerSecondX32 ?? 0n) + result.rewardsPerSecondX32,
+      activeIncentiveCount: (current?.activeIncentiveCount ?? 0) + (result.active ? 1 : 0),
     });
   }
 
@@ -220,10 +252,28 @@ async function readRewards(
   const results = await Promise.all(
     rewards.map(async ({ address, amounts }) => {
       try {
+        let settledAmount = 0n;
+        try {
+          settledAmount = await publicClient.readContract({
+            address: VSWAP_NETWORK.staker,
+            abi: VSWAP_STAKER_ABI,
+            functionName: 'rewards',
+            args: [discovered.tokenId, address],
+          });
+        } catch {
+          warnings.push(`奖励代币 ${address} 已结算金额读取失败`);
+        }
         return {
           token: await readToken(address),
-          ...amounts,
-          totalAmount: amounts.unsettledAmount + amounts.settledAmount,
+          unsettledAmount: amounts.unsettledAmount,
+          settledAmount,
+          totalAmount: amounts.unsettledAmount + settledAmount,
+          estimatedDailyAmount:
+            blockTimestamp === null ? null : estimateDailyVSwapReward(amounts.rewardsPerSecondX32),
+          activeIncentiveCount:
+            blockTimestamp === null || failedRewardTokens.has(address)
+              ? null
+              : amounts.activeIncentiveCount,
         };
       } catch {
         warnings.push(`奖励代币 ${address} 元数据读取失败`);
@@ -298,6 +348,7 @@ export async function readVSwapPosition(
     tickLower,
     tickUpper,
     currentTick: slot0[1],
+    sqrtPriceX96: slot0[0],
     liquidity,
     status: resolveVSwapPositionStatus(liquidity, slot0[1], tickLower, tickUpper),
     token0Amount: { token: token0, amount: amount0 },

@@ -26,14 +26,14 @@ src/
   components/             无链上副作用的通用 UI
   config/                 Core/eSpace 网络、标准 PoS 池和 vSwap 精简 ABI
   domain/                 地址、金额、聚合、交易规则与类型
-  features/dashboard/     Core 聚合、eSpace 余额/vSwap 仓位、地址切换与列表总额
+  features/dashboard/     Core 聚合、eSpace 余额/vSwap 列表与详情、地址切换与列表总额
   features/pools/         池集合、概览 Query、校验、排序、生命周期、管理与卡片
   features/settings/      本地数据导入导出 UI
   features/theme/         主题解析、Provider、切换控件
   features/wallet/        Fluent Provider、门禁、交易 UI
   infrastructure/conflux/ Core/eSpace RPC、合约读取、交易构造
   infrastructure/storage/ 业务 localStorage schema 与恢复
-  pages/                  首页、地址总览、池详情
+  pages/                  首页、地址总览、Core 池详情、vSwap 仓位详情
 e2e/
   smoke.spec.ts           关键本地流程、主题持久化与布局稳定性
 ```
@@ -64,9 +64,20 @@ e2e/
 - vSwap 经过 `useVSwapPositions`：先由 staker subgraph 分页发现 `isManaged: true` 的 NFT，
   再为每个仓位建立独立 Query，使用 viem 读取 Position Manager、池、ERC-20 元数据和
   Staker。单仓位失败不能中断原生余额或其他仓位。
+- vSwap 详情路由为 `/address/:address/vswap/:tokenId`。页面先规范化 eSpace 地址并校验
+  token ID 为 `uint256` 范围内的非负十进制整数，再由仓位发现结果确认 NFT 属于该地址；
+  未发现时不得直接发起该 NFT 的链上读取。索引返回的 owner 也必须与查询地址匹配。
+- 列表与详情复用 `['vswap-positions', chainId, address]` 和
+  `['vswap-position', chainId, address, tokenId]` Query key，避免重复读取和跨网络缓存污染。
 - 仓位 token 数量使用 Uniswap V3 TickMath/Q96 bigint 公式计算；手续费通过只读模拟
   `AutoPositionManager.collect` 获取，farming 奖励按 reward token 合并。多 token 汇总
   不折算成美元或 CFX；整仓位失败或可选字段 warning 都使汇总以已读取下限展示。
+- 详情读取池 `slot0.sqrtPriceX96` 后，由 domain 层使用 `bigint` 有理数计算当前价格和
+  完整 Tick 区间；反向报价取倒数并交换区间端点，展示层只格式化十进制字符串。
+- 奖励读取以最新区块时间筛选 `[startTime, endTime)` 内的 incentive，按奖励 token 汇总
+  仓位级 `rewardsPerSecondX32` 后换算一天。`getStakeRewardInfo` 只读调用使用合约要求的
+  `0x…fe01` mock sender；区块时间、单计划、已结算金额或 token 元数据失败继续作为可选
+  warning 隔离，不能让整个仓位失败。
 - 两类 Query 互斥启用，切换路由不能触发错误网络的请求。
 
 ### 地址列表
@@ -136,6 +147,9 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
   不发送交易。
 - eSpace 原生余额和 vSwap Query key 包含 chain ID，避免主网与测试网缓存混用。
 - 链上金额全部使用 `bigint`；展示层只格式化字符串。
+- vSwap 双向价格使用 `sqrtPriceX96`、token decimals 和 `2^192` 组成的 `bigint` 有理数；
+  farming 日收益只汇总活动 incentive 的仓位级 Q32 速率，再统一除以 `2^32`，禁止逐计划
+  截断或使用浮点数。
 - `poolAPY()` 原始整数按基点保存在 `PoolPosition.expectedApyBps`；读取失败使用 `null`
   降级，禁止前端根据累计收益或浮点数自行推算。
 - 复投时间估算只使用合约 APY 近 7 天年化快照作匀速外推；不读取或猜测未来链上收益，
@@ -154,8 +168,10 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
   使用 `bigint`。
 - 单元测试覆盖网络选择/切换、钱包表单 MAX、生命周期折叠、池查询/排序、`inQueue`
   解质押门禁、动态交易成本和本地数据导入导出；Playwright 覆盖读取范围、池排序控件、
-  主题、地址切换与布局。vSwap 单元测试覆盖 TickMath、subgraph 分页、逐仓位失败隔离、
-  token 聚合和 warning-only 下限。真实钱包写流程另按 `docs/TODO.md` 验证。
+  主题、地址切换、详情归属门禁与布局。vSwap 单元测试覆盖 TickMath、双向价格与区间
+  端点、极小价格格式化、subgraph 分页/owner 校验、incentive 时间边界、Q32 速率汇总、
+  详情 Query 缓存复用、逐仓位失败隔离、token 聚合和 warning-only 下限。真实钱包写流程
+  另按 `docs/TODO.md` 验证。
 
 ## 构建与部署
 
