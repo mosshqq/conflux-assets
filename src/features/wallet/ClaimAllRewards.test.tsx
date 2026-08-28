@@ -39,6 +39,7 @@ describe('ClaimAllRewards', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    sendTransaction.mockReset();
     vi.mocked(useCoreWallet).mockReturnValue({
       status: 'active',
       account: 'cfx:user',
@@ -66,7 +67,17 @@ describe('ClaimAllRewards', () => {
     sendTransaction.mockResolvedValueOnce('0xfirst').mockResolvedValueOnce('0xsecond');
   });
 
-  it('submits eligible pool claims one at a time after confirmation', async () => {
+  it('requests every eligible claim before waiting for any receipt', async () => {
+    const events: string[] = [];
+    sendTransaction.mockReset();
+    sendTransaction.mockImplementation(async (transaction: { to: string }) => {
+      events.push(`send:${transaction.to}`);
+      return transaction.to === 'cfx:first' ? '0xfirst' : '0xsecond';
+    });
+    client.waitForTransactionReceipt.mockImplementation(async (hash: string) => {
+      events.push(`wait:${hash}`);
+    });
+
     const queryClient = new QueryClient();
     render(
       <QueryClientProvider client={queryClient}>
@@ -81,7 +92,8 @@ describe('ClaimAllRewards', () => {
     await userEvent.click(screen.getByRole('button', { name: '一键领取' }));
     await userEvent.click(screen.getByRole('button', { name: '在 Fluent 中逐笔确认' }));
 
-    await waitFor(() => expect(sendTransaction).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(events).toHaveLength(4));
+    expect(events).toEqual(['send:cfx:first', 'send:cfx:second', 'wait:0xfirst', 'wait:0xsecond']);
     expect(client.preparePoolTransaction).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({ poolAddress: 'cfx:first', action: 'claim' }),
@@ -93,6 +105,36 @@ describe('ClaimAllRewards', () => {
     expect(client.readCfxBalance).toHaveBeenCalledTimes(2);
     expect(client.waitForTransactionReceipt).toHaveBeenNthCalledWith(1, '0xfirst');
     expect(client.waitForTransactionReceipt).toHaveBeenNthCalledWith(2, '0xsecond');
+  });
+
+  it('waits for already submitted claims when a later confirmation is rejected', async () => {
+    sendTransaction.mockReset();
+    sendTransaction.mockResolvedValueOnce('0xfirst').mockRejectedValueOnce(new Error('用户拒绝'));
+
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ClaimAllRewards
+          address="cfx:user"
+          positions={[
+            position('first', DRIP_PER_CFX),
+            position('second', DRIP_PER_CFX),
+            position('third', DRIP_PER_CFX),
+          ]}
+          poolCount={3}
+        />
+      </QueryClientProvider>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: '一键领取' }));
+    await userEvent.click(screen.getByRole('button', { name: '在 Fluent 中逐笔确认' }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/已发送 1\/3 笔，成功回执 1 笔/)).toBeInTheDocument(),
+    );
+    expect(sendTransaction).toHaveBeenCalledTimes(2);
+    expect(client.preparePoolTransaction).toHaveBeenCalledTimes(2);
+    expect(client.waitForTransactionReceipt).toHaveBeenCalledWith('0xfirst');
   });
 
   it('skips rewards below the saved minimum threshold', async () => {
