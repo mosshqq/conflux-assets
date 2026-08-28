@@ -118,38 +118,72 @@ export function ClaimAllRewards({
     event.preventDefault();
     if (!pending || !wallet.account) return;
 
+    const claims = pending;
     setSubmitting(true);
     setError('');
     setCompletedClaims([]);
-    let completedCount = 0;
+    const submittedClaims: CompletedClaim[] = [];
+    let submissionError: unknown;
 
     try {
-      for (const position of pending) {
-        const walletBalanceDrip = await readCfxBalance(wallet.account);
-        const transaction = await preparePoolTransaction({
-          poolAddress: position.pool.address,
-          from: wallet.account,
-          action: 'claim',
-        });
-        validateTransactionBalance(transaction, walletBalanceDrip);
-        const transactionHash = await wallet.sendTransaction(transaction);
-        await waitForTransactionReceipt(transactionHash);
-        completedCount += 1;
-        setCompletedClaims((current) => [...current, { pool: position.pool, transactionHash }]);
-        await queryClient.invalidateQueries({
-          queryKey: ['position', address, position.pool.address],
-        });
-        await queryClient.invalidateQueries({ queryKey: ['balance', address] });
+      try {
+        for (const position of claims) {
+          const walletBalanceDrip = await readCfxBalance(wallet.account);
+          const transaction = await preparePoolTransaction({
+            poolAddress: position.pool.address,
+            from: wallet.account,
+            action: 'claim',
+          });
+          validateTransactionBalance(transaction, walletBalanceDrip);
+          const transactionHash = await wallet.sendTransaction(transaction);
+          submittedClaims.push({ pool: position.pool, transactionHash });
+        }
+      } catch (caught) {
+        submissionError = caught;
       }
-      setPending(null);
-    } catch (caught) {
-      const message = caught instanceof Error ? caught.message : '交易提交失败';
-      setPending(null);
-      setError(
-        completedCount > 0
-          ? `已成功领取 ${completedCount}/${pending.length} 个池；其余池未发起交易：${message}`
-          : message,
+
+      const receiptResults = await Promise.allSettled(
+        submittedClaims.map(async (claim) => {
+          await waitForTransactionReceipt(claim.transactionHash);
+          return claim;
+        }),
       );
+      const successfulClaims: CompletedClaim[] = [];
+      const receiptErrors: string[] = [];
+
+      for (const result of receiptResults) {
+        if (result.status === 'fulfilled') {
+          successfulClaims.push(result.value);
+          setCompletedClaims((current) => [...current, result.value]);
+          await queryClient.invalidateQueries({
+            queryKey: ['position', address, result.value.pool.address],
+          });
+          await queryClient.invalidateQueries({ queryKey: ['balance', address] });
+        } else {
+          receiptErrors.push(
+            result.reason instanceof Error ? result.reason.message : '交易回执失败',
+          );
+        }
+      }
+
+      if (submissionError || receiptErrors.length > 0) {
+        const submissionMessage =
+          submissionError instanceof Error
+            ? submissionError.message
+            : submissionError
+              ? '交易提交失败'
+              : '';
+        const message = [submissionMessage, ...receiptErrors].filter(Boolean).join('；');
+        setError(
+          submittedClaims.length > 0
+            ? `已发送 ${submittedClaims.length}/${claims.length} 笔，成功回执 ${successfulClaims.length} 笔；${
+                submittedClaims.length < claims.length ? '其余交易未发起；' : ''
+              }${message || '交易提交失败'}`
+            : message || '交易提交失败',
+        );
+      }
+
+      setPending(null);
     } finally {
       setSubmitting(false);
     }
@@ -277,7 +311,7 @@ export function ClaimAllRewards({
         {pending ? (
           <form onSubmit={confirmClaimAll}>
             <p className="text-sm leading-6 text-muted">
-              将按以下顺序逐笔准备交易、由 Fluent 请求签名，并在每笔回执成功后继续下一笔。
+              将按以下顺序逐笔准备交易并请求 Fluent 确认；确认完成后统一等待交易回执。
             </p>
             <ul className="mt-4 max-h-52 space-y-2 overflow-y-auto rounded-xl bg-surface p-4 text-sm">
               {pending.map((position) => (
@@ -288,8 +322,8 @@ export function ClaimAllRewards({
               ))}
             </ul>
             <p className="mt-4 text-xs leading-5 text-muted">
-              每笔交易都会重新读取钱包余额，并按准备后的 gas
-              与存储抵押校验；若某笔被拒绝或失败，后续交易不会发起。
+              每笔交易都会重新读取钱包余额，并按准备后的 gas 与存储抵押校验。Fluent
+              的确认请求会逐笔出现，确认后立即提交且不会等待前一笔回执；若某笔被拒绝或准备失败，后续交易不会发起。
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
@@ -301,7 +335,7 @@ export function ClaimAllRewards({
                 取消
               </button>
               <button type="submit" className="primary-button" disabled={submitting}>
-                {submitting ? '领取中…' : '在 Fluent 中逐笔确认'}
+                {submitting ? '确认并领取中…' : '在 Fluent 中逐笔确认'}
               </button>
             </div>
           </form>
