@@ -26,6 +26,7 @@ function position(overrides: Partial<PoolPosition> = {}): PoolPosition {
     unlockedVotes: 1n,
     governanceLockedDrip: 0n,
     governanceUnlockBlock: 0n,
+    claimedInterestDrip: 0n,
     claimableDrip: DRIP_PER_CFX,
     stakeLockQueue: [],
     unlockQueue: [],
@@ -44,6 +45,7 @@ describe('portfolio', () => {
     expect(summary.pendingDrip).toBe(DRIP_PER_VOTE);
     expect(summary.unlockedDrip).toBe(DRIP_PER_VOTE);
     expect(summary.claimableDrip).toBe(2n * DRIP_PER_CFX);
+    expect(summary.cumulativeInterestDrip).toBe(2n * DRIP_PER_CFX);
     expect(summary.principalDrip).toBe(7n * DRIP_PER_VOTE);
     expect(summary.poolTotalDrip).toBe(7n * DRIP_PER_VOTE + 2n * DRIP_PER_CFX);
     expect(aggregatePortfolioTotal(10n * DRIP_PER_CFX, summary)).toBe(
@@ -87,6 +89,15 @@ describe('portfolio', () => {
         }),
       ),
     ).toBe(true);
+  });
+
+  it('aggregates claimed and currently claimable interest as cumulative earnings', () => {
+    const summary = aggregatePositions([
+      position({ claimedInterestDrip: 3n * DRIP_PER_CFX, claimableDrip: 2n * DRIP_PER_CFX }),
+      position({ claimedInterestDrip: 4n * DRIP_PER_CFX, claimableDrip: 1n * DRIP_PER_CFX }),
+    ]);
+
+    expect(summary.cumulativeInterestDrip).toBe(10n * DRIP_PER_CFX);
   });
 
   it('estimates the next stake time from all active stakes weighted by APY', () => {

@@ -13,6 +13,7 @@ function position(id: string, claimableDrip: bigint): PoolPosition {
     unlockedVotes: 0n,
     governanceLockedDrip: 0n,
     governanceUnlockBlock: 0n,
+    claimedInterestDrip: 0n,
     claimableDrip,
     stakeLockQueue: [],
     unlockQueue: [],

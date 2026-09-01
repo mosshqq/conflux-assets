@@ -30,8 +30,8 @@
   chain ID、地址和 token ID 的 TanStack Query key。
 - vSwap 详情：展示完整 Tick 区间、基于池 `slot0.sqrtPriceX96` 的当前价格、双向报价切换、
   仓位资产、手续费、奖励，以及按活动 incentive 仓位级奖励速率换算的预计每日奖励。
-- 聚合：有效质押、解质押中、可提取本金、未领取收益，以及可用余额加池内本金和收益的
-  Core 总资产；存在未读取池时按下限展示。
+- 聚合：有效质押、解质押中、可提取本金、未领取收益、累计收益，以及可用余额加池内本金
+  和收益的 Core 总资产；存在未读取池时按下限展示。
 - Core 预计每日收益：逐池使用有效质押和链上 `poolAPY()` 基点值计算一天预计收益后
   汇总；数据或有效持仓池 APY 不完整时不展示部分估算。
 - Core 复投提示：按可用余额、待领取的未领取收益、所有有效质押和各池链上 APY 估算
@@ -62,6 +62,8 @@
 - 有效质押：`userSummary.available`。
 - 可提取本金：`userSummary.unlocked`。
 - 未领取收益：`userInterest(address)`。
+- 累计收益：对每个成功读取的已记录池，使用 `userSummary.claimedInterest` 加上实时
+  `userInterest(address)`，再汇总为该地址的累计收益；池读取不完整时只展示已读取池的下限。
 - 解质押中：`max(totalVotes - availableVotes - unlockedVotes, 0)`。
 - `userSummary.available` 包含仍在 `inQueue` 的票；可发起解质押额度必须使用
   `userSummary.locked`，并扣除 `userLockInfo` 的治理锁定票数。
@@ -84,6 +86,8 @@
   预计值以 `≥` 标识。
 - 地址总览 Core 总资产：可用余额加成功读取池的有效质押、解质押中、可提取本金和
   未领取收益；未完成的池查询不展示总值，池读取失败时以 `≥` 标识已读取资产下限。
+- 地址总览 Core 累计收益：汇总每个成功读取池的已领取收益与当前未领取收益；首次读取未完成
+  时不展示部分值，池读取失败时以 `≥` 标识已读取池的累计收益下限。
 - `poolAPY()` 返回基点整数，例如 `756` 展示为 `7.56%`；旧池不支持时 APY 为不可用，
   不影响该池其他持仓字段。
 - 池总质押使用 `poolSummary().available` 返回的票数，按 `1 票 = 1000 CFX` 展示；不使用

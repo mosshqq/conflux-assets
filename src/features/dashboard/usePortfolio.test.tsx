@@ -29,6 +29,7 @@ const goodPosition: PoolPosition = {
   unlockedVotes: 0n,
   governanceLockedDrip: 0n,
   governanceUnlockBlock: 0n,
+  claimedInterestDrip: 0n,
   claimableDrip: 0n,
   stakeLockQueue: [],
   unlockQueue: [],

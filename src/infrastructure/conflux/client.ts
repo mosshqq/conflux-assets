@@ -70,6 +70,7 @@ export async function readPoolPosition(
   const activeVotes = toBigInt(field(summary, 'available', 1) ?? 0);
   const lockedVotes = toBigInt(field(summary, 'locked', 2) ?? 0);
   const unlockedVotes = toBigInt(field(summary, 'unlocked', 3) ?? 0);
+  const claimedInterestDrip = toBigInt(field(summary, 'claimedInterest', 4) ?? 0);
   const pendingVotesRaw = totalVotes - activeVotes - unlockedVotes;
   const stakeLockQueue = Array.isArray(stakeQueue)
     ? stakeQueue.map((item) => ({
@@ -94,6 +95,7 @@ export async function readPoolPosition(
     unlockedVotes,
     governanceLockedDrip: toBigInt(field(lockInfo, 'amount', 0) ?? 0),
     governanceUnlockBlock: toBigInt(field(lockInfo, 'unlockBlockNumber', 1) ?? 0),
+    claimedInterestDrip,
     claimableDrip: toBigInt(interest),
     stakeLockQueue,
     unlockQueue,

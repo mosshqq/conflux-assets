@@ -47,6 +47,9 @@ e2e/
 - 地址总览总资产由 domain 聚合规则计算：Core 可用余额加成功读取池的有效质押、
   解质押中、可提取本金和未领取收益；有池尚在首次读取时暂不显示总值，有池读取失败时
   使用 `≥` 展示已读取下限并明确提示缺失数量。
+- 地址总览累计收益由 domain 聚合规则计算：对每个成功读取的已记录池，累加
+  `userSummary.claimedInterest + userInterest(address)`；有池尚在首次读取时暂不显示部分值，
+  有池读取失败时使用 `≥` 展示已读取池的累计收益下限。
 - 地址总览的“预计下次可质押时间”由 `domain/portfolio` 计算：在可用余额和全部池持仓
   已读取时，把可用余额与未领取收益同 `1001 CFX`（一张 1000 CFX 票及 1 CFX 基础费用
   预留）比较；不足部分仅按 `activeVotes` 和相应 `poolAPY()` 基点的加权年化收益，以
@@ -149,6 +152,8 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
   不发送交易。
 - eSpace 原生余额和 vSwap Query key 包含 chain ID，避免主网与测试网缓存混用。
 - 链上金额全部使用 `bigint`；展示层只格式化字符串。
+- Core 累计收益使用每个用户池的已领取收益与实时未领取收益之和，跨池汇总时全程使用
+  `bigint`，不使用浮点金额或池级全局 `poolSummary.totalInterest`。
 - vSwap 双向价格使用 `sqrtPriceX96`、token decimals 和 `2^192` 组成的 `bigint` 有理数；
   farming 日收益只汇总活动 incentive 的仓位级 Q32 速率，再统一除以 `2^32`，禁止逐计划
   截断或使用浮点数。

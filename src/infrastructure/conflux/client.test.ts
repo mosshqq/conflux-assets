@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => {
   });
 
   const contract = {
-    userSummary: vi.fn(() => method('0xsummary', [5n, 3n, 2n, 1n, 0n, 9n])),
+    userSummary: vi.fn(() => method('0xsummary', [5n, 3n, 2n, 1n, 40n, 9n])),
     userInterest: vi.fn(() => method('0xinterest', 99n)),
     userInQueue: vi.fn(() => method('0xstake-queue', [[2n, 480n]])),
     userOutQueue: vi.fn(() => method('0xqueue', [[1n, 500n]])),
@@ -76,6 +76,7 @@ describe('Conflux client', () => {
       pendingVotes: 1n,
       unlockedVotes: 1n,
       governanceLockedDrip: 1000n,
+      claimedInterestDrip: 40n,
       claimableDrip: 99n,
     });
     expect(position.stakeLockQueue).toEqual([{ votes: 2n, lockBlock: 480n }]);

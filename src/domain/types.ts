@@ -32,6 +32,7 @@ export interface PoolPosition {
   unlockedVotes: bigint;
   governanceLockedDrip: bigint;
   governanceUnlockBlock: bigint;
+  claimedInterestDrip: bigint;
   claimableDrip: bigint;
   stakeLockQueue: StakeLockQueueItem[];
   unlockQueue: UnlockQueueItem[];
@@ -60,6 +61,7 @@ export interface PortfolioSummary {
   pendingDrip: bigint;
   unlockedDrip: bigint;
   claimableDrip: bigint;
+  cumulativeInterestDrip: bigint;
   principalDrip: bigint;
   poolTotalDrip: bigint;
 }

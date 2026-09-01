@@ -298,6 +298,22 @@ export function DashboardPage() {
                 accent
               />
               <MetricCard
+                label="累计收益"
+                value={
+                  pendingPoolCount > 0
+                    ? '—'
+                    : `${missingPoolCount > 0 ? '≥ ' : ''}${formatCfx(summary.cumulativeInterestDrip, 6)} CFX`
+                }
+                hint={
+                  pendingPoolCount > 0
+                    ? `仍有 ${pendingPoolCount} 个池读取中`
+                    : missingPoolCount > 0
+                      ? `${missingPoolCount} 个池读取失败，当前值为已读取池的累计收益下限`
+                      : '各已记录池的已领取收益 + 当前未领取收益'
+                }
+                accent
+              />
+              <MetricCard
                 label="预计每日收益"
                 value={
                   expectedDailyYieldDrip === undefined || expectedDailyYieldDrip === null

@@ -15,6 +15,7 @@ const position: PoolPosition = {
   unlockedVotes: 1n,
   governanceLockedDrip: DRIP_PER_VOTE,
   governanceUnlockBlock: 300n,
+  claimedInterestDrip: 0n,
   claimableDrip: 0n,
   stakeLockQueue: [
     { votes: 1n, lockBlock: 90n },

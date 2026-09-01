@@ -46,6 +46,8 @@ export function aggregatePositions(positions: PoolPosition[]): PortfolioSummary 
         pendingDrip: summary.pendingDrip + pendingDrip,
         unlockedDrip: summary.unlockedDrip + unlockedDrip,
         claimableDrip: summary.claimableDrip + position.claimableDrip,
+        cumulativeInterestDrip:
+          summary.cumulativeInterestDrip + position.claimedInterestDrip + position.claimableDrip,
         principalDrip: summary.principalDrip + principalDrip,
         poolTotalDrip: summary.poolTotalDrip + principalDrip + position.claimableDrip,
       };
@@ -55,6 +57,7 @@ export function aggregatePositions(positions: PoolPosition[]): PortfolioSummary 
       pendingDrip: 0n,
       unlockedDrip: 0n,
       claimableDrip: 0n,
+      cumulativeInterestDrip: 0n,
       principalDrip: 0n,
       poolTotalDrip: 0n,
     },

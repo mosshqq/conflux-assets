@@ -28,6 +28,7 @@ function position(
     unlockedVotes: 0n,
     governanceLockedDrip: 0n,
     governanceUnlockBlock: 0n,
+    claimedInterestDrip: 0n,
     stakeLockQueue: [],
     unlockQueue: [],
     ...values,
