@@ -8,12 +8,12 @@
   （钱包切网、生命周期折叠、质押/解质押 MAX）和本地数据导入导出。2026-08-13 已核验
   生产首页包含“本地数据”入口，eSpace 生产网络为 Mainnet 1030；2026-09-01 已部署 Core
   Space 总览和池详情累计收益统计。
-- 最新已发布 `main` SHA 为 `2c333134d96e23dcaba5bb9581ecb1bf40e6cacf`；对应
-  `deploy-pages.yml` run `33480935333` 于 2026-09-01 成功，生产站点可访问。
+- 最新已发布 `main` SHA 为 `e81ae9f295e046201bf0a17a5aed388dad4b1359`；对应
+  `deploy-pages.yml` run `33481178004` 于 2026-09-01 成功，生产站点可访问。
 - PR #6 已将 vSwap 仓位详情和一键领取提交优化合入 `main` 并部署；累计收益功能随后直接
   合入 `main`，当前版本通过 116 项单测、8 项 E2E、类型、Lint、格式和生产构建。
-- 生产核验：首页返回 HTTP 200；详情路径返回 SPA fallback 内容；线上 JS 已包含
-  `VSwapPositionDetailPage` 和新的“确认后立即提交”逻辑。
+- 生产核验：首页返回 HTTP 200；Core 池详情资源已包含“累计收益”；详情路径返回 SPA
+  fallback 内容；线上 JS 已包含 `VSwapPositionDetailPage` 和新的“确认后立即提交”逻辑。
 - eSpace 主网和测试网真实仓位读取已验证；375px 无横向溢出且浏览器控制台无错误。
 - Core 测试网真实 Fluent 写交易闭环已完成。
 

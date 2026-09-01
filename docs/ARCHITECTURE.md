@@ -64,7 +64,9 @@ e2e/
   只作提示，状态判断始终使用目标区块和链上字段；`inQueue` 中目标区块已到达但尚未被
   合约清理的节点不再作为“锁定中”展示。
 - 池详情的累计收益指标复用该池持仓数据，展示 `userSummary.claimedInterest` 加上
-  `userInterest(address)` 的结果。
+  `userInterest(address)` 的结果；读取层保存为 `PoolPosition.claimedInterestDrip`，由
+  `domain/portfolio.getCumulativeInterestDrip` 与地址总览共用计算。该指标只用于收益展示，
+  不写入 `poolTotalDrip` 或 `aggregatePortfolioTotal`，避免把当前未领取收益重复计入总资产。
 - eSpace 原生余额经过 `useESpaceBalance`，只调用 `eth_getBalance`。
 - vSwap 经过 `useVSwapPositions`：先由 staker subgraph 分页发现 `isManaged: true` 的 NFT，
   再为每个仓位建立独立 Query，使用 viem 读取 Position Manager、池、ERC-20 元数据和

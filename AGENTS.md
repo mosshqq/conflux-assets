@@ -43,6 +43,10 @@
   只能计算原生可用余额；查询必须复用现有 TanStack Query key。
 - 地址总览 Core 总资产只能计算“可用余额 + 成功读取池的有效质押、解质押中、可提取
   本金、未领取收益”；首次查询未完成时不展示总值，池读取失败时必须以 `≥` 标识下限。
+- Core 累计收益只能按每个已记录且成功读取池的
+  `userSummary.claimedInterest + userInterest(address)` 汇总；首次读取未完成时不展示部分
+  值，读取失败时用 `≥` 标识已读取下限。池详情复用同一单池计算；累计收益不得使用
+  `poolSummary.totalInterest`，也不得重复计入总资产或地址列表总 CFX。
 - 质押生命周期必须读取标准池 `userInQueue()`、`userOutQueue()` 和当前区块；剩余时间
   只能作为约 2 区块/秒的提示，状态判断必须使用目标区块与链上字段；增加质押锁定只
   展示 `lockBlock > currentBlock` 的未完成节点；详情默认收起但当前区块必须保持可见。
