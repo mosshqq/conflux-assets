@@ -33,6 +33,10 @@ function aggregateAnnualYieldWeight(activePositions: PoolPosition[]): bigint | n
   );
 }
 
+export function getCumulativeInterestDrip(position: PoolPosition): bigint {
+  return position.claimedInterestDrip + position.claimableDrip;
+}
+
 export function aggregatePositions(positions: PoolPosition[]): PortfolioSummary {
   return positions.reduce<PortfolioSummary>(
     (summary, position) => {
@@ -47,7 +51,7 @@ export function aggregatePositions(positions: PoolPosition[]): PortfolioSummary 
         unlockedDrip: summary.unlockedDrip + unlockedDrip,
         claimableDrip: summary.claimableDrip + position.claimableDrip,
         cumulativeInterestDrip:
-          summary.cumulativeInterestDrip + position.claimedInterestDrip + position.claimableDrip,
+          summary.cumulativeInterestDrip + getCumulativeInterestDrip(position),
         principalDrip: summary.principalDrip + principalDrip,
         poolTotalDrip: summary.poolTotalDrip + principalDrip + position.claimableDrip,
       };

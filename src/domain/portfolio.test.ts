@@ -5,6 +5,7 @@ import {
   aggregatePositions,
   estimateDailyYield,
   estimateNextStake,
+  getCumulativeInterestDrip,
   hasPosition,
   maxUnstakeVotes,
 } from './portfolio';
@@ -98,6 +99,9 @@ describe('portfolio', () => {
     ]);
 
     expect(summary.cumulativeInterestDrip).toBe(10n * DRIP_PER_CFX);
+    expect(getCumulativeInterestDrip(position({ claimedInterestDrip: 3n * DRIP_PER_CFX }))).toBe(
+      4n * DRIP_PER_CFX,
+    );
   });
 
   it('estimates the next stake time from all active stakes weighted by APY', () => {

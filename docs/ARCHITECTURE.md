@@ -63,6 +63,8 @@ e2e/
   质押锁定、可解质押额度、解质押等待和本金提取四阶段时间线。时间按约 2 区块/秒估算，
   只作提示，状态判断始终使用目标区块和链上字段；`inQueue` 中目标区块已到达但尚未被
   合约清理的节点不再作为“锁定中”展示。
+- 池详情的累计收益指标复用该池持仓数据，展示 `userSummary.claimedInterest` 加上
+  `userInterest(address)` 的结果。
 - eSpace 原生余额经过 `useESpaceBalance`，只调用 `eth_getBalance`。
 - vSwap 经过 `useVSwapPositions`：先由 staker subgraph 分页发现 `isManaged: true` 的 NFT，
   再为每个仓位建立独立 Query，使用 viem 读取 Position Manager、池、ERC-20 元数据和

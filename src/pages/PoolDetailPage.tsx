@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { CORE_NETWORK, PORTFOLIO_REFRESH_INTERVAL } from '../config/network';
 import { addressesEqual, normalizePoolAddress, normalizeUserAddress } from '../domain/address';
 import { formatBasisPoints, formatCfx, votesToDrip } from '../domain/money';
+import { getCumulativeInterestDrip } from '../domain/portfolio';
 import { StakingLifecycleTimeline } from '../features/pools/StakingLifecycleTimeline';
 import { usePools } from '../features/pools/usePools';
 import { PoolActions } from '../features/wallet/PoolActions';
@@ -120,12 +121,13 @@ export function PoolDetailPage() {
         </div>
       ) : (
         <>
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {[
               ['有效质押', votesToDrip(positionQuery.data.activeVotes), false],
               ['解质押中', votesToDrip(positionQuery.data.pendingVotes), false],
               ['可提取本金', votesToDrip(positionQuery.data.unlockedVotes), false],
               ['未领取收益', positionQuery.data.claimableDrip, true],
+              ['累计收益', getCumulativeInterestDrip(positionQuery.data), true],
             ].map(([label, value, accent]) => (
               <div key={String(label)} className="rounded-2xl border border-line bg-panel p-5">
                 <p className="text-sm text-muted">{String(label)}</p>
