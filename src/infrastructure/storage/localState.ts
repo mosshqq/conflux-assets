@@ -61,6 +61,27 @@ const persistedStateExportSchema = z.object({
   state: persistedStateSchema,
 });
 
+const poolConfigExportItemSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    address: z.string(),
+    website: z.string().optional(),
+    source: z.literal('custom'),
+  })
+  .strict();
+
+const poolConfigExportSchema = z
+  .object({
+    app: z.literal('conflux-assets'),
+    exportType: z.literal('pos-pools'),
+    exportVersion: z.literal(1),
+    coreNetworkId: z.enum(['mainnet', 'testnet']),
+    exportedAt: z.string(),
+    pools: z.array(poolConfigExportItemSchema),
+  })
+  .strict();
+
 export interface PersistedStateV1 {
   version: 1;
   bookmarks: AddressBookmark[];
@@ -75,6 +96,15 @@ export interface PersistedStateExportV1 {
   coreNetworkId: CoreNetwork['id'];
   exportedAt: string;
   state: PersistedStateV1;
+}
+
+export interface PoolConfigExportV1 {
+  app: 'conflux-assets';
+  exportType: 'pos-pools';
+  exportVersion: 1;
+  coreNetworkId: CoreNetwork['id'];
+  exportedAt: string;
+  pools: PoolConfig[];
 }
 
 export const EMPTY_PERSISTED_STATE: PersistedStateV1 = {
@@ -125,6 +155,34 @@ export function serializePersistedStateExport(
   return `${JSON.stringify(createPersistedStateExport(state, network), null, 2)}\n`;
 }
 
+export function createPoolConfigExport(
+  pools: PoolConfig[],
+  network: CoreNetwork = CORE_NETWORK,
+  exportedAt: Date = new Date(),
+): PoolConfigExportV1 {
+  return {
+    app: 'conflux-assets',
+    exportType: 'pos-pools',
+    exportVersion: 1,
+    coreNetworkId: network.id,
+    exportedAt: exportedAt.toISOString(),
+    pools: pools.map(({ id, name, address, website, source }) => ({
+      id,
+      name,
+      address,
+      ...(website === undefined ? {} : { website }),
+      source,
+    })),
+  };
+}
+
+export function serializePoolConfigExport(
+  pools: PoolConfig[],
+  network: CoreNetwork = CORE_NETWORK,
+): string {
+  return `${JSON.stringify(createPoolConfigExport(pools, network), null, 2)}\n`;
+}
+
 export function parsePersistedStateImport(
   raw: string,
   network: CoreNetwork = CORE_NETWORK,
@@ -144,6 +202,27 @@ export function parsePersistedStateImport(
   }
 
   return result.data.state;
+}
+
+export function parsePoolConfigImport(
+  raw: string,
+  network: CoreNetwork = CORE_NETWORK,
+): PoolConfig[] {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('池配置文件不是有效 JSON');
+  }
+
+  const result = poolConfigExportSchema.safeParse(parsed);
+  if (!result.success) throw new Error('池配置文件格式不受支持');
+  if (result.data.coreNetworkId !== network.id) {
+    throw new Error(`池配置文件属于 Core ${result.data.coreNetworkId}，当前为 ${network.id}`);
+  }
+
+  return result.data.pools;
 }
 
 function mergeByKey<T>(incoming: T[], current: T[], keyOf: (item: T) => string): T[] {
@@ -167,4 +246,8 @@ export function mergePersistedState(
     homePoolSort: incoming.homePoolSort,
     positionPoolSort: incoming.positionPoolSort,
   };
+}
+
+export function mergePoolConfigs(current: PoolConfig[], incoming: PoolConfig[]): PoolConfig[] {
+  return mergeByKey(incoming, current, (item) => item.address);
 }

@@ -15,6 +15,7 @@ export interface AppStateValue {
   setPositionPoolSort: (sort: PositionPoolSort) => void;
   exportState: () => PersistedStateV1;
   importState: (state: PersistedStateV1) => void;
+  importCustomPools: (pools: PoolConfig[]) => void;
 }
 
 export const AppStateContext = createContext<AppStateValue | undefined>(undefined);

@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { CORE_MAINNET, CORE_TESTNET } from '../../config/network';
 import {
+  createPoolConfigExport,
   createPersistedStateExport,
   EMPTY_PERSISTED_STATE,
+  mergePoolConfigs,
   mergePersistedState,
+  parsePoolConfigImport,
   parsePersistedStateImport,
   readPersistedState,
+  serializePoolConfigExport,
   serializePersistedStateExport,
   storageKeyForCoreNetwork,
   writePersistedState,
@@ -106,6 +110,36 @@ describe('local state', () => {
     expect(parsePersistedStateImport(exported, CORE_MAINNET)).toEqual(state);
   });
 
+  it('serializes and parses pool-only export files without address data', () => {
+    const pools = [
+      {
+        id: 'custom:pool',
+        name: '收藏池',
+        address: 'cfx:contract',
+        website: 'https://example.com',
+        source: 'custom' as const,
+      },
+    ];
+
+    const exported = serializePoolConfigExport(pools, CORE_MAINNET);
+
+    expect(exported).not.toContain('bookmarks');
+    expect(exported).not.toContain('cfx:user');
+    expect(parsePoolConfigImport(exported, CORE_MAINNET)).toEqual(pools);
+  });
+
+  it('rejects full local backups and pool files from a different Core network', () => {
+    const fullBackup = createPersistedStateExport(EMPTY_PERSISTED_STATE, CORE_MAINNET);
+    expect(() => parsePoolConfigImport(JSON.stringify(fullBackup), CORE_MAINNET)).toThrowError(
+      '池配置文件格式不受支持',
+    );
+
+    const exported = createPoolConfigExport([], CORE_TESTNET);
+    expect(() => parsePoolConfigImport(JSON.stringify(exported), CORE_MAINNET)).toThrowError(
+      '池配置文件属于 Core testnet，当前为 mainnet',
+    );
+  });
+
   it('rejects imports from a different Core network', () => {
     const exported = createPersistedStateExport(EMPTY_PERSISTED_STATE, CORE_TESTNET);
 
@@ -149,5 +183,22 @@ describe('local state', () => {
       homePoolSort: 'apy-desc',
       positionPoolSort: 'claimable-desc',
     });
+  });
+
+  it('merges pool configs in imported order without changing unrelated state', () => {
+    const current = [
+      { id: 'old', name: '旧池', address: 'cfx:pool', source: 'custom' as const },
+      { id: 'local', name: '本地池', address: 'cfx:localpool', source: 'custom' as const },
+    ];
+    const incoming = [
+      { id: 'new', name: '新池', address: 'cfx:pool', source: 'custom' as const },
+      { id: 'imported', name: '导入池', address: 'cfx:imported', source: 'custom' as const },
+    ];
+
+    expect(mergePoolConfigs(current, incoming)).toEqual([
+      { id: 'new', name: '新池', address: 'cfx:pool', source: 'custom' },
+      { id: 'imported', name: '导入池', address: 'cfx:imported', source: 'custom' },
+      { id: 'local', name: '本地池', address: 'cfx:localpool', source: 'custom' },
+    ]);
   });
 });

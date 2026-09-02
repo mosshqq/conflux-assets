@@ -1,10 +1,15 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { Download, Upload } from 'lucide-react';
 import { useAppState } from '../../app/useAppState';
 import { CORE_NETWORK } from '../../config/network';
 import { decodeCoreAddress, normalizePoolAddress, shortenAddress } from '../../domain/address';
 import { formatBasisPoints, formatCfx, votesToDrip } from '../../domain/money';
 import type { HomePoolSort } from '../../domain/types';
 import { validateStandardPool } from '../../infrastructure/conflux/client';
+import {
+  parsePoolConfigImport,
+  serializePoolConfigExport,
+} from '../../infrastructure/storage/localState';
 import { PoolSortSelect } from './PoolSortSelect';
 import { sortPoolOverviewIndexes } from './poolSorting';
 import { usePoolOverviews } from './usePoolOverviews';
@@ -18,13 +23,22 @@ const HOME_POOL_SORT_OPTIONS: Array<{ value: HomePoolSort; label: string }> = [
 ];
 
 export function PoolManager() {
-  const { customPools, homePoolSort, addCustomPool, removeCustomPool, setHomePoolSort } =
-    useAppState();
+  const {
+    customPools,
+    homePoolSort,
+    addCustomPool,
+    removeCustomPool,
+    setHomePoolSort,
+    importCustomPools,
+  } = useAppState();
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [website, setWebsite] = useState('');
   const [error, setError] = useState('');
+  const [transferMessage, setTransferMessage] = useState('');
+  const [transferError, setTransferError] = useState('');
   const [checking, setChecking] = useState(false);
+  const poolFileInputRef = useRef<HTMLInputElement>(null);
   const overviewQueries = usePoolOverviews(customPools);
   const allAddresses = useMemo(
     () => new Set(customPools.map((pool) => pool.address)),
@@ -64,19 +78,79 @@ export function PoolManager() {
     }
   }
 
+  function handleExport() {
+    setTransferError('');
+    const blob = new Blob([serializePoolConfigExport(customPools)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `conflux-pos-pools-${CORE_NETWORK.id}-${new Date()
+      .toISOString()
+      .slice(0, 10)}.json`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setTransferMessage(`已导出 ${customPools.length} 个 PoS 池配置。`);
+  }
+
+  async function handleImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setTransferError('');
+    setTransferMessage('');
+
+    try {
+      const imported = parsePoolConfigImport(await file.text());
+      importCustomPools(imported);
+      setTransferMessage(`已导入 ${imported.length} 个 PoS 池配置。`);
+    } catch (caught) {
+      setTransferError(caught instanceof Error ? caught.message : '池配置导入失败');
+    }
+  }
+
   return (
     <section className="rounded-2xl border border-line bg-panel p-5">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
           <h2 className="text-lg font-semibold">PoS 池管理</h2>
           <p className="mt-1 text-sm text-muted">
-            手动输入标准 PoS Pool 合约地址，链上校验后收藏到当前浏览器。
+            手动输入标准 PoS Pool 合约地址，链上校验后收藏到当前浏览器；池配置备份不包含地址收藏。
           </p>
         </div>
-        <span className="rounded-full bg-surface px-3 py-1 text-xs text-muted">
-          已收藏 {customPools.length} 个
-        </span>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <span className="rounded-full bg-surface px-3 py-1 text-xs text-muted">
+            已收藏 {customPools.length} 个
+          </span>
+          <button type="button" onClick={handleExport} className="secondary-button gap-2">
+            <Download size={16} aria-hidden="true" />
+            导出池配置
+          </button>
+          <button
+            type="button"
+            onClick={() => poolFileInputRef.current?.click()}
+            className="secondary-button gap-2"
+          >
+            <Upload size={16} aria-hidden="true" />
+            导入池配置
+          </button>
+          <input
+            ref={poolFileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={(event) => void handleImport(event)}
+            className="sr-only"
+            aria-label="导入 PoS 池配置文件"
+          />
+        </div>
       </div>
+
+      {transferMessage ? <p className="mt-3 text-sm text-accent">{transferMessage}</p> : null}
+      {transferError ? <p className="mt-3 text-sm text-danger">{transferError}</p> : null}
 
       <form onSubmit={handleSubmit} className="mt-5 grid gap-3 lg:grid-cols-[1fr_2fr_1.5fr_auto]">
         <input

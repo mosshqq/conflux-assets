@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   EMPTY_PERSISTED_STATE,
+  mergePoolConfigs,
   mergePersistedState,
   readPersistedState,
   writePersistedState,
@@ -63,6 +64,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((current) => mergePersistedState(current, importedState));
   }, []);
 
+  const importCustomPools = useCallback((pools: PoolConfig[]) => {
+    setState((current) => ({
+      ...current,
+      customPools: mergePoolConfigs(current.customPools, pools),
+    }));
+  }, []);
+
   const value = useMemo(
     () => ({
       bookmarks: state.bookmarks,
@@ -77,10 +85,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setPositionPoolSort,
       exportState,
       importState,
+      importCustomPools,
     }),
     [
       addCustomPool,
       exportState,
+      importCustomPools,
       importState,
       removeBookmark,
       removeCustomPool,

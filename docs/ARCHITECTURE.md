@@ -139,6 +139,11 @@ SDK/RPC 脚本可用于诊断链上行为，但不能替代 Fluent 注入、确�
 - 本地数据导出文件只包含当前 Core 网络范围的上述持久化状态，并写入 `coreNetworkId`；
   导入时必须匹配当前 Core 网络，格式通过 `infrastructure/storage/localState.ts` 校验后再
   与现有收藏合并，重复地址或池以导入文件为准。
+- PoS 池管理提供独立的池配置导出文件，使用 `exportType: 'pos-pools'` 区分完整本地备份，
+  只序列化池的 `id`、名称、合约地址、官网和 `source`；文件不包含收藏地址、排序偏好、
+  链上查询结果或钱包信息。池配置导入同样必须匹配 `coreNetworkId`，通过
+  `infrastructure/storage/localState.ts` 的专用 schema 校验，并按导入项优先、保留本地独有
+  池的规则合并。
 - 主题使用独立 key `conflux-assets:theme`，值为 `system | light | dark`。
 - 主题控件使用 Lucide 图标按钮按 `system -> light -> dark` 循环切换。
 - 颜色定义在 `src/styles.css` 的 CSS 变量，Tailwind 只引用语义颜色。
